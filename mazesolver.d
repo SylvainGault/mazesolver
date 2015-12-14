@@ -228,6 +228,7 @@ int main(string[] args) {
 	filename = args[1];
 
 	gui = new SDLGui();
+	gui.setTitle("Maze Solver");
 	gui.loadImage(filename);
 	gui.start();
 	dostuff(gui);
