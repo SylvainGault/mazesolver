@@ -74,7 +74,7 @@ import sdl.image;
 
 class SDLGui : Gui {
 	this() {
-		int err = SDL_Init(SDL_InitFlags.VIDEO | SDL_InitFlags.TIMER);
+		int err = SDL_Init(SDL_InitFlags.VIDEO);
 		sdl_enforce(err == 0);
 		wantquit = false;
 	}
