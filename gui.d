@@ -21,6 +21,9 @@ struct Color {
 }
 
 interface Gui {
+	/* Set the window title. */
+	void setTitle(string title);
+
 	/* Load an image. */
 	void loadImage(string filename);
 
@@ -87,6 +90,12 @@ class SDLGui : Gui {
 		image = null;
 		IMG_Quit();
 		SDL_Quit();
+	}
+
+
+
+	void setTitle(string title) {
+		SDL_WM_SetCaption(title.toStringz, null);
 	}
 
 
