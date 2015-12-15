@@ -1,5 +1,7 @@
 import std.stdio;
 import std.math;
+import std.datetime;
+import core.time;
 import std.algorithm;
 
 import gui;
@@ -170,6 +172,8 @@ void dostuff(ref Gui gui) {
 	Maze maze;
 	Color cs, ce;
 	Coord2D size;
+	StopWatch timer;
+	Duration dur;
 
 	writeln("Click starting point");
 	while ((mbe = gui.lastClick()) == null && !gui.quit)
@@ -209,7 +213,11 @@ void dostuff(ref Gui gui) {
 		}
 	}
 
+	timer.start();
 	solveMaze(gui, maze);
+	timer.stop();
+	dur = cast(Duration)timer.peek;
+	writeln(dur.total!"hnsecs" / cast(real)(seconds(1).total!"hnsecs"));
 }
 
 int main(string[] args) {
