@@ -1,7 +1,5 @@
 import std.stdio;
 import std.math;
-import std.container.array;
-import std.container.binaryheap;
 import std.algorithm;
 
 import gui;
@@ -97,10 +95,8 @@ void solveMaze(ref Gui gui, Maze maze) {
 		return false;
 	}
 
-	alias ArrayCoord2D = Array!Coord2D;
 	alias HeapCoord2D = Heap!(Coord2D, cmpcoord);
 	bool solved = false;
-	//ArrayCoord2D store = [maze.start];
 	HeapCoord2D pending = new HeapCoord2D();
 
 	pending.insert(maze.start);
