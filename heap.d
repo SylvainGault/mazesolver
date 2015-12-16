@@ -66,8 +66,10 @@ class Heap(T, alias less = "a < b") {
 		if (data.length <= 1)
 			return;
 
-		for (int i = (data.length - 2) / 2; i >= 0; i--)
-			bubbleDown(i);
+		/* This loop is all shifted by 1 so that the condition "i > 0"
+		 * works with size_t which is unsigned. */
+		for (size_t i = data.length / 2; i > 0; i--)
+			bubbleDown(i - 1);
 	}
 
 
@@ -76,8 +78,8 @@ class Heap(T, alias less = "a < b") {
 		if (e !in indexOf)
 			return;
 
-		int idx = indexOf[e];
-		int parentIdx = (idx - 1) / 2;
+		size_t idx = indexOf[e];
+		size_t parentIdx = (idx - 1) / 2;
 
 		if (idx > 0 && comp(data[parentIdx], data[idx]))
 			bubbleUp(idx);
@@ -89,8 +91,8 @@ class Heap(T, alias less = "a < b") {
 
 	/* Take a heap with the last element violating the Heap invariant and
 	 * restore it. */
-	private void bubbleUp(int idx) {
-		int parentIdx = (idx - 1) / 2;
+	private void bubbleUp(size_t idx) {
+		size_t parentIdx = (idx - 1) / 2;
 
 		while (idx > 0 && comp(data[parentIdx], data[idx])) {
 			swapAt(parentIdx, idx);
@@ -103,9 +105,9 @@ class Heap(T, alias less = "a < b") {
 
 	/* Take a heap with the first element violating the Heap invariant and
 	 * restore it. */
-	private void bubbleDown(int idx) {
-		int leftIdx = 2 * idx + 1;
-		int rightIdx = leftIdx + 1;
+	private void bubbleDown(size_t idx) {
+		size_t leftIdx = 2 * idx + 1;
+		size_t rightIdx = leftIdx + 1;
 
 		while (leftIdx < data.length) {
 			bool l, r, swapright;
@@ -138,7 +140,7 @@ class Heap(T, alias less = "a < b") {
 
 
 
-	private void swapAt(int a, int b) {
+	private void swapAt(size_t a, size_t b) {
 		swap(data[a], data[b]);
 		indexOf[data[a]] = a;
 		indexOf[data[b]] = b;
@@ -159,7 +161,7 @@ class Heap(T, alias less = "a < b") {
 		if (data.length <= 1)
 			return;
 
-		for (int i = 0; i <= (data.length - 2) / 2; i++) {
+		for (size_t i = 0; i <= (data.length - 2) / 2; i++) {
 			assert(!comp(data[i], data[2 * i + 1]));
 
 			if (2 * i + 2 < data.length)
@@ -177,6 +179,6 @@ class Heap(T, alias less = "a < b") {
 
 
 	private T[] data;
-	private int[T] indexOf;
+	private size_t[T] indexOf;
 	private alias comp = binaryFun!less;
 }
