@@ -46,7 +46,7 @@ class MazeSolver {
 
 
 
-	private void tracePath(Maze maze) {
+	private void tracePath() {
 		Coord2D here;
 
 		here = maze.end;
@@ -60,7 +60,7 @@ class MazeSolver {
 
 
 
-	private void solveMaze(Maze maze) {
+	private void solveMaze() {
 		bool cmpcoord(Coord2D a, Coord2D b) {
 			Node na, nb;
 			na = maze.grid[a.y][a.x];
@@ -156,7 +156,7 @@ class MazeSolver {
 		}
 
 		if (solved)
-			tracePath(maze);
+			tracePath();
 
 		gui.updateDisplay(true, false);
 		writeln("Done");
@@ -174,7 +174,6 @@ class MazeSolver {
 
 	private void dostuff() {
 		MouseButtonEvent *mbe;
-		Maze maze;
 		Color cs, ce;
 		Coord2D size;
 		StopWatch timer;
@@ -219,7 +218,7 @@ class MazeSolver {
 		}
 
 		timer.start();
-		solveMaze(maze);
+		solveMaze();
 		timer.stop();
 		dur = cast(Duration)timer.peek;
 		writeln(dur.total!"hnsecs" / cast(real)(seconds(1).total!"hnsecs"));
@@ -246,6 +245,10 @@ class MazeSolver {
 
 		return 0;
 	}
+
+
+
+	private Maze maze;
 }
 
 
