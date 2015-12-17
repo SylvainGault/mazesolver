@@ -42,7 +42,11 @@ struct Maze {
 
 
 class MazeSolver {
-	private void tracePath(ref Gui gui, Maze maze) {
+	public Gui gui;
+
+
+
+	private void tracePath(Maze maze) {
 		Coord2D here;
 
 		here = maze.end;
@@ -56,7 +60,7 @@ class MazeSolver {
 
 
 
-	private void solveMaze(ref Gui gui, Maze maze) {
+	private void solveMaze(Maze maze) {
 		bool cmpcoord(Coord2D a, Coord2D b) {
 			Node na, nb;
 			na = maze.grid[a.y][a.x];
@@ -152,7 +156,7 @@ class MazeSolver {
 		}
 
 		if (solved)
-			tracePath(gui, maze);
+			tracePath(maze);
 
 		gui.updateDisplay(true, false);
 		writeln("Done");
@@ -168,7 +172,7 @@ class MazeSolver {
 
 
 
-	private void dostuff(ref Gui gui) {
+	private void dostuff() {
 		MouseButtonEvent *mbe;
 		Maze maze;
 		Color cs, ce;
@@ -215,7 +219,7 @@ class MazeSolver {
 		}
 
 		timer.start();
-		solveMaze(gui, maze);
+		solveMaze(maze);
 		timer.stop();
 		dur = cast(Duration)timer.peek;
 		writeln(dur.total!"hnsecs" / cast(real)(seconds(1).total!"hnsecs"));
@@ -236,13 +240,17 @@ int main(string[] args) {
 
 	filename = args[1];
 
+	/* Instanciate the components. */
 	gui = new SDLGui();
 	solver = new MazeSolver();
+
+	/* Connect the components. */
+	solver.gui = gui;
 
 	gui.setTitle("Maze Solver");
 	gui.loadImage(filename);
 	gui.start();
-	solver.dostuff(gui);
+	solver.dostuff();
 	gui.handlePendingEventsWait();
 	gui.finish();
 
