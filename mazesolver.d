@@ -105,9 +105,9 @@ class MazeSolver {
 			return na.addtime < nb.addtime;
 		}
 
-		alias HeapCoord2D = Heap!(Coord2D, cmpcoord);
+		alias BinaryHeapCoord2D = BinaryHeap!(Coord2D, cmpcoord);
 		bool solved = false;
-		HeapCoord2D pending = new HeapCoord2D();
+		BinaryHeapCoord2D pending = new BinaryHeapCoord2D();
 
 		pending.insert(maze.start);
 

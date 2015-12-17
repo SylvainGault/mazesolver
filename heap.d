@@ -5,7 +5,7 @@ import core.exception;
 
 
 
-class Heap(T, alias less = "a < b") {
+class BinaryHeap(T, alias less = "a < b") {
 	import std.functional : binaryFun;
 
 
