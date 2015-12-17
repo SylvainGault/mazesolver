@@ -227,7 +227,7 @@ class MazeSolver {
 
 
 
-	int main(string[] args) {
+	int run(string[] args) {
 		string filename;
 
 		if (args.length < 2) {
@@ -261,6 +261,6 @@ int main(string[] args) {
 	/* Connect the components. */
 	solver.gui = gui;
 
-	/* Run the main component. */
-	return solver.main(args);
+	/* Run the main components. */
+	return solver.run(args);
 }
