@@ -6,7 +6,7 @@ MKDIR = mkdir -p
 LIBS = sdl SDL_image
 
 #DEBUGOPT = -O3 -frelease
-DEBUGOPT = -ggdb
+DEBUGOPT = -ggdb3
 
 DFLAGS = -Wall -Wextra -Wno-uninitialized -pedantic $(DEBUGOPT)
 LDFLAGS = -use-ld=gold $(DEBUGOPT)
