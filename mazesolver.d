@@ -60,6 +60,40 @@ class MazeSolver {
 
 
 
+	/* Decide whether the neighbor cell should be visited. */
+	private bool addNeighbor(Coord2D me, Coord2D other) {
+		bool add;
+
+		if (other.y >= maze.grid.length)
+			return false;
+		if (other.x >= maze.grid[other.y].length)
+			return false;
+
+		const Node* nme = &maze.grid[me.y][me.x];
+		Node* nother = &maze.grid[other.y][other.x];
+
+		if (nother.isWall)
+			return false;
+
+		if (nother.dist <= nme.dist + 1)
+			return false;
+
+		assert(nother.state != NodeVisitState.VISITED);
+
+		nother.dist = nme.dist + 1;
+		nother.prev = me;
+
+		if (nother.state == NodeVisitState.UNVISITED) {
+			nother.addtime = maze.time++;
+			nother.state = NodeVisitState.PENDING;
+			return true;
+		}
+
+		return false;
+	}
+
+
+
 	private void solveMaze() {
 		bool cmpcoord(Coord2D a, Coord2D b) {
 			Node na, nb;
@@ -69,37 +103,6 @@ class MazeSolver {
 				return na.dist + na.heuristic > nb.dist + nb.heuristic;
 
 			return na.addtime < nb.addtime;
-		}
-
-		bool addNeighbor(Coord2D me, Coord2D other) {
-			bool add;
-
-			if (other.y >= maze.grid.length)
-				return false;
-			if (other.x >= maze.grid[other.y].length)
-				return false;
-
-			const Node* nme = &maze.grid[me.y][me.x];
-			Node* nother = &maze.grid[other.y][other.x];
-
-			if (nother.isWall)
-				return false;
-
-			if (nother.dist <= nme.dist + 1)
-				return false;
-
-			assert(nother.state != NodeVisitState.VISITED);
-
-			nother.dist = nme.dist + 1;
-			nother.prev = me;
-
-			if (nother.state == NodeVisitState.UNVISITED) {
-				nother.addtime = maze.time++;
-				nother.state = NodeVisitState.PENDING;
-				return true;
-			}
-
-			return false;
 		}
 
 		alias HeapCoord2D = Heap!(Coord2D, cmpcoord);
