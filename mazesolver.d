@@ -60,23 +60,23 @@ class MazeSolver {
 
 
 
-	/* Decide whether the neighbor cell should be visited. */
-	private bool addNeighbor(Coord2D me, Coord2D other) {
+	/* Insert the neighbor cell in the heap if needed. */
+	private void addNeighbor(Coord2D me, Coord2D other, HeapCoord2D pending) {
 		bool add;
 
 		if (other.y >= maze.grid.length)
-			return false;
+			return;
 		if (other.x >= maze.grid[other.y].length)
-			return false;
+			return;
 
 		const Node* nme = &maze.grid[me.y][me.x];
 		Node* nother = &maze.grid[other.y][other.x];
 
 		if (nother.isWall)
-			return false;
+			return;
 
 		if (nother.dist <= nme.dist + 1)
-			return false;
+			return;
 
 		assert(nother.state != NodeVisitState.VISITED);
 
@@ -86,10 +86,11 @@ class MazeSolver {
 		if (nother.state == NodeVisitState.UNVISITED) {
 			nother.addtime = maze.time++;
 			nother.state = NodeVisitState.PENDING;
-			return true;
+			pending.insert(other);
+			gui.pixelColor(other, colorpending);
+		} else {
+			pending.update(other);
 		}
-
-		return false;
 	}
 
 
@@ -105,7 +106,6 @@ class MazeSolver {
 			return na.addtime < nb.addtime;
 		}
 
-		alias HeapCoord2D = Heap!Coord2D;
 		alias BinaryHeapCoord2D = BinaryHeap!(Coord2D, cmpcoord);
 		bool solved = false;
 		HeapCoord2D pending = new BinaryHeapCoord2D();
@@ -127,32 +127,16 @@ class MazeSolver {
 			maze.grid[me.y][me.x].state = NodeVisitState.VISITED;
 
 			other = Coord2D(me.x, me.y - 1);
-			if (addNeighbor(me, other)) {
-				pending.insert(other);
-				gui.pixelColor(other, colorpending);
-			}
-			pending.update(other);
+			addNeighbor(me, other, pending);
 
 			other = Coord2D(me.x, me.y + 1);
-			if (addNeighbor(me, other)) {
-				pending.insert(other);
-				gui.pixelColor(other, colorpending);
-			}
-			pending.update(other);
+			addNeighbor(me, other, pending);
 
 			other = Coord2D(me.x - 1, me.y);
-			if (addNeighbor(me, other)) {
-				pending.insert(other);
-				gui.pixelColor(other, colorpending);
-			}
-			pending.update(other);
+			addNeighbor(me, other, pending);
 
 			other = Coord2D(me.x + 1, me.y);
-			if (addNeighbor(me, other)) {
-				pending.insert(other);
-				gui.pixelColor(other, colorpending);
-			}
-			pending.update(other);
+			addNeighbor(me, other, pending);
 
 			gui.pixelColor(me, colorvisited);
 			gui.handlePendingEvents();
@@ -257,6 +241,8 @@ class MazeSolver {
 	}
 
 
+
+	private alias HeapCoord2D = Heap!Coord2D;
 
 	private Maze maze;
 }
