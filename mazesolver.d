@@ -172,12 +172,10 @@ class MazeSolver {
 
 
 
-	private void dostuff() {
+	private void initMaze() {
 		MouseButtonEvent *mbe;
 		Color cs, ce;
 		Coord2D size;
-		StopWatch timer;
-		Duration dur;
 
 		writeln("Click starting point");
 		while ((mbe = gui.lastClick()) == null && !gui.quit)
@@ -216,7 +214,15 @@ class MazeSolver {
 				maze.grid[y][x].heuristic = distance(c, maze.end);
 			}
 		}
+	}
 
+
+
+	private void dostuff() {
+		StopWatch timer;
+		Duration dur;
+
+		initMaze();
 		timer.start();
 		solveMaze();
 		timer.stop();
