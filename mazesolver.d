@@ -224,21 +224,35 @@ class MazeSolver {
 		dur = cast(Duration)timer.peek;
 		writeln(dur.total!"hnsecs" / cast(real)(seconds(1).total!"hnsecs"));
 	}
+
+
+
+	int main(string[] args) {
+		string filename;
+
+		if (args.length < 2) {
+			stderr.writefln("usage: %s image", args[0]);
+			return 1;
+		}
+
+		filename = args[1];
+
+		gui.setTitle("Maze Solver");
+		gui.loadImage(filename);
+		gui.start();
+		dostuff();
+		gui.handlePendingEventsWait();
+		gui.finish();
+
+		return 0;
+	}
 }
 
 
 
 int main(string[] args) {
-	string filename;
 	Gui gui;
 	MazeSolver solver;
-
-	if (args.length < 2) {
-		stderr.writefln("usage: %s image", args[0]);
-		return 1;
-	}
-
-	filename = args[1];
 
 	/* Instanciate the components. */
 	gui = new SDLGui();
@@ -247,12 +261,6 @@ int main(string[] args) {
 	/* Connect the components. */
 	solver.gui = gui;
 
-	gui.setTitle("Maze Solver");
-	gui.loadImage(filename);
-	gui.start();
-	solver.dostuff();
-	gui.handlePendingEventsWait();
-	gui.finish();
-
-	return 0;
+	/* Run the main component. */
+	return solver.main(args);
 }
