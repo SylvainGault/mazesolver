@@ -183,7 +183,7 @@ class MazeSolver {
 
 
 
-	void dostuff() {
+	void run() {
 		StopWatch timer;
 		Duration dur;
 
@@ -251,7 +251,7 @@ class MainCoordinator {
 		gui.loadImage(filename);
 		gui.start();
 		setStartEnd();
-		solver.dostuff();
+		solver.run();
 		gui.handlePendingEventsWait();
 		gui.finish();
 
