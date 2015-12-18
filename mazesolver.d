@@ -161,29 +161,8 @@ class MazeSolver {
 
 
 	private void initMaze() {
-		MouseButtonEvent *mbe;
 		Color cs, ce;
 		Coord2D size;
-
-		writeln("Click starting point");
-		while ((mbe = gui.lastClick()) == null && !gui.quit)
-			gui.handleOneEventWait();
-
-		if (gui.quit)
-			return;
-
-		maze.start = mbe.coord;
-		maze.start.writeln;
-
-		writeln("Click destination point");
-		while ((mbe = gui.lastClick()) == null && !gui.quit)
-			gui.handleOneEventWait();
-
-		if (gui.quit)
-			return;
-
-		maze.end = mbe.coord;
-		maze.end.writeln;
 
 		cs = gui.pixelColor(maze.start);
 		ce = gui.pixelColor(maze.end);
@@ -273,11 +252,39 @@ class MainCoordinator {
 		gui.setTitle("Maze Solver");
 		gui.loadImage(filename);
 		gui.start();
+		setStartEnd();
 		solver.dostuff();
 		gui.handlePendingEventsWait();
 		gui.finish();
 
 		return 0;
+	}
+
+
+
+	private void setStartEnd() {
+		MouseButtonEvent *mbe;
+
+		writeln("Click starting point");
+		while ((mbe = gui.lastClick()) == null && !gui.quit)
+			gui.handleOneEventWait();
+
+		if (gui.quit)
+			return;
+
+		solver.startCoord = mbe.coord;
+		solver.startCoord.writeln;
+
+		writeln("Click destination point");
+		while ((mbe = gui.lastClick()) == null && !gui.quit)
+			gui.handleOneEventWait();
+
+		if (gui.quit)
+			return;
+
+		solver.endCoord = mbe.coord;
+		solver.endCoord.writeln;
+
 	}
 }
 
