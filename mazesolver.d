@@ -247,9 +247,9 @@ class MazeSolver {
 
 
 	private uint distance(Coord2D a, Coord2D b) {
-		real dx = cast(real)a.x - cast(real)b.x;
-		real dy = cast(real)a.y - cast(real)b.y;
-		return cast(uint)hypot(10 * dx, 10 * dy);
+		uint dx = abs(cast(int)a.x - cast(int)b.x);
+		uint dy = abs(cast(int)a.y - cast(int)b.y);
+		return 14 * min(dx, dy) + 10 * (max(dx, dy) - min(dx, dy));
 	}
 
 
