@@ -15,32 +15,6 @@ enum Color colorpending = Color(127, 127, 255);
 enum Color colorpath = Color(255, 0, 0);
 
 
-enum NodeVisitState : ubyte {
-	UNVISITED,
-	PENDING,
-	VISITED
-}
-
-struct Node {
-	bool isWall;
-	Coord2D prev;
-	uint dist = uint.max;
-	uint heuristic;
-	NodeVisitState state = NodeVisitState.UNVISITED;
-	uint addtime;
-}
-
-
-
-struct Maze {
-	Node[][] grid;
-	Coord2D start;
-	Coord2D end;
-	uint time;
-}
-
-
-
 class MazeSolver {
 	public Gui gui;
 
@@ -227,6 +201,30 @@ class MazeSolver {
 
 
 	private alias HeapCoord2D = Heap!Coord2D;
+
+	private enum NodeVisitState : ubyte {
+		UNVISITED,
+		PENDING,
+		VISITED
+	}
+
+	private struct Node {
+		bool isWall;
+		Coord2D prev;
+		uint dist = uint.max;
+		uint heuristic;
+		NodeVisitState state = NodeVisitState.UNVISITED;
+		uint addtime;
+	}
+
+	private struct Maze {
+		Node[][] grid;
+		Coord2D start;
+		Coord2D end;
+		uint time;
+	}
+
+
 
 	private Maze maze;
 }
