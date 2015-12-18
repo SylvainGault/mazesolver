@@ -20,6 +20,44 @@ class MazeSolver {
 
 
 
+	@property Coord2D startCoord() {
+		return maze.start;
+	}
+
+
+
+	@property Coord2D startCoord(Coord2D c) {
+		return maze.start = c;
+	}
+
+
+
+	@property Coord2D endCoord() {
+		return maze.end;
+	}
+
+
+
+	@property Coord2D endCoord(Coord2D c) {
+		return maze.end = c;
+	}
+
+
+
+	void run() {
+		StopWatch timer;
+		Duration dur;
+
+		initMaze();
+		timer.start();
+		solveMaze();
+		timer.stop();
+		dur = cast(Duration)timer.peek;
+		writeln(dur.total!"hnsecs" / cast(real)(seconds(1).total!"hnsecs"));
+	}
+
+
+
 	private void tracePath() {
 		Coord2D here;
 
@@ -155,44 +193,6 @@ class MazeSolver {
 				maze.grid[y][x].heuristic = distance(c, maze.end);
 			}
 		}
-	}
-
-
-
-	@property Coord2D startCoord() {
-		return maze.start;
-	}
-
-
-
-	@property Coord2D startCoord(Coord2D c) {
-		return maze.start = c;
-	}
-
-
-
-	@property Coord2D endCoord() {
-		return maze.end;
-	}
-
-
-
-	@property Coord2D endCoord(Coord2D c) {
-		return maze.end = c;
-	}
-
-
-
-	void run() {
-		StopWatch timer;
-		Duration dur;
-
-		initMaze();
-		timer.start();
-		solveMaze();
-		timer.stop();
-		dur = cast(Duration)timer.peek;
-		writeln(dur.total!"hnsecs" / cast(real)(seconds(1).total!"hnsecs"));
 	}
 
 
