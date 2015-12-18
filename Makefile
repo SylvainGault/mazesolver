@@ -3,7 +3,7 @@ LD = gdc
 RM = rm -f
 MKDIR = mkdir -p
 
-LIBS = sdl SDL_image
+LIBS = sdl SDL_image SDL_ttf
 
 #DEBUGOPT = -O3 -frelease
 DEBUGOPT = -ggdb3
