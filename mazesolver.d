@@ -73,13 +73,40 @@ class MazeSolver {
 
 
 
+	private bool dirIsDiagonal(Coord2DDir dir) {
+		final switch (dir) {
+			case Coord2DDir.NORTHEAST:
+			case Coord2DDir.NORTHWEST:
+			case Coord2DDir.SOUTHWEST:
+			case Coord2DDir.SOUTHEAST:
+				return true;
+			case Coord2DDir.EAST:
+			case Coord2DDir.NORTH:
+			case Coord2DDir.WEST:
+			case Coord2DDir.SOUTH:
+				return false;
+		}
+	}
+
+
+
 	private Coord2D move(Coord2D coord, Coord2DDir dir) {
 		final switch (dir) {
 		case Coord2DDir.EAST:
 			coord.x++;
 			break;
 
+		case Coord2DDir.NORTHEAST:
+			coord.x++;
+			coord.y--;
+			break;
+
 		case Coord2DDir.NORTH:
+			coord.y--;
+			break;
+
+		case Coord2DDir.NORTHWEST:
+			coord.x--;
 			coord.y--;
 			break;
 
@@ -87,7 +114,17 @@ class MazeSolver {
 			coord.x--;
 			break;
 
+		case Coord2DDir.SOUTHWEST:
+			coord.x--;
+			coord.y++;
+			break;
+
 		case Coord2DDir.SOUTH:
+			coord.y++;
+			break;
+
+		case Coord2DDir.SOUTHEAST:
+			coord.x++;
 			coord.y++;
 			break;
 		}
@@ -102,31 +139,39 @@ class MazeSolver {
 		static assert(isUnsigned!(typeof(coord.x)));
 		static assert(isUnsigned!(typeof(coord.y)));
 
-		coord = move(coord, dir);
+		Coord2D c = move(coord, dir);
 
 		/* Since the coordinate wrap instead of going negative, the
 		 * test is simpler. */
-		if (coord.y >= maze.grid.length)
+		if (c.y >= maze.grid.length)
 			return false;
-		if (coord.x >= maze.grid[coord.y].length)
+		if (c.x >= maze.grid[c.y].length)
 			return false;
 
-		return !maze.grid[coord.y][coord.x].isWall;
+		if (maze.grid[c.y][c.x].isWall)
+			return false;
+
+		/* This test actually work for all 8 directions. */
+		if (maze.grid[c.y][coord.x].isWall ||
+		    maze.grid[coord.y][c.x].isWall)
+			return false;
+
+		return true;
 	}
 
 
 
 	/* Insert the neighbor cell in the heap if needed. */
-	private void addNeighbor(Coord2D me, Coord2D other, HeapCoord2D pending) {
+	private void addNeighbor(Coord2D me, Coord2D other, HeapCoord2D pending, uint dist) {
 		const Node* nme = &maze.grid[me.y][me.x];
 		Node* nother = &maze.grid[other.y][other.x];
 
-		if (nother.dist <= nme.dist + 1)
+		if (nother.dist <= nme.dist + dist)
 			return;
 
-		assert(nother.state != NodeVisitState.VISITED);
+		assert(nother.state != NodeVisitState.VISITED, "Node already visited");
 
-		nother.dist = nme.dist + 1;
+		nother.dist = nme.dist + dist;
 		nother.prev = me;
 
 		if (nother.state == NodeVisitState.UNVISITED) {
@@ -179,7 +224,12 @@ class MazeSolver {
 					continue;
 
 				other = move(me, d);
-				addNeighbor(me, other, pending);
+
+				// sqrt(2) is 1.4142135623
+				if (dirIsDiagonal(d))
+					addNeighbor(me, other, pending, 14);
+				else
+					addNeighbor(me, other, pending, 10);
 			}
 
 			gui.pixelColor(me, colorvisited);
@@ -199,7 +249,7 @@ class MazeSolver {
 	private uint distance(Coord2D a, Coord2D b) {
 		real dx = cast(real)a.x - cast(real)b.x;
 		real dy = cast(real)a.y - cast(real)b.y;
-		return cast(uint)hypot(dx, dy);
+		return cast(uint)hypot(10 * dx, 10 * dy);
 	}
 
 
@@ -241,7 +291,7 @@ class MazeSolver {
 	}
 
 	private enum Coord2DDir {
-		EAST, NORTH, WEST, SOUTH
+		EAST, NORTHEAST, NORTH, NORTHWEST, WEST, SOUTHWEST, SOUTH, SOUTHEAST
 	}
 
 	private struct Node {
