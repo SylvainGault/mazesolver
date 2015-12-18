@@ -313,11 +313,11 @@ class SDLGui : Gui {
 			rect.y = cast(short)updateMin.y;
 			rect.w = cast(short)(updateMax.x - updateMin.x);
 			rect.h = cast(short)(updateMax.y - updateMin.y);
-			SDL_UpdateRects(screen, 1, &rect);
 		} else {
-			SDL_UpdateRect(screen, 0, 0, 0, 0);
+			rect = SDL_Rect(0, 0, 0, 0);
 		}
 
+		SDL_UpdateRect(screen, rect.x, rect.y, rect.w, rect.h);
 
 		updateMin = typeof(updateMin).init;
 		updateMax = typeof(updateMax).init;
