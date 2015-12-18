@@ -3,6 +3,7 @@ import std.math;
 import std.datetime;
 import core.time;
 import std.algorithm;
+import std.traits;
 
 import gui;
 import heap;
@@ -72,20 +73,53 @@ class MazeSolver {
 
 
 
+	private Coord2D move(Coord2D coord, Coord2DDir dir) {
+		final switch (dir) {
+		case Coord2DDir.EAST:
+			coord.x++;
+			break;
+
+		case Coord2DDir.NORTH:
+			coord.y--;
+			break;
+
+		case Coord2DDir.WEST:
+			coord.x--;
+			break;
+
+		case Coord2DDir.SOUTH:
+			coord.y++;
+			break;
+		}
+
+		return coord;
+	}
+
+
+
+	private bool canMove(Coord2D coord, Coord2DDir dir) {
+		/* The coordinates are unsigned and may wrap. */
+		static assert(isUnsigned!(typeof(coord.x)));
+		static assert(isUnsigned!(typeof(coord.y)));
+
+		coord = move(coord, dir);
+
+		/* Since the coordinate wrap instead of going negative, the
+		 * test is simpler. */
+		if (coord.y >= maze.grid.length)
+			return false;
+		if (coord.x >= maze.grid[coord.y].length)
+			return false;
+
+		return !maze.grid[coord.y][coord.x].isWall;
+	}
+
+
+
 	/* Insert the neighbor cell in the heap if needed. */
 	private void addNeighbor(Coord2D me, Coord2D other, HeapCoord2D pending) {
-		bool add;
-
-		if (other.y >= maze.grid.length)
-			return;
-		if (other.x >= maze.grid[other.y].length)
-			return;
-
 		const Node* nme = &maze.grid[me.y][me.x];
 		Node* nother = &maze.grid[other.y][other.x];
-
-		if (nother.isWall)
-			return;
 
 		if (nother.dist <= nme.dist + 1)
 			return;
@@ -129,7 +163,6 @@ class MazeSolver {
 
 		while (pending.length > 0 && !gui.quit) {
 			Coord2D me = pending.removeAny();
-			Coord2D other;
 
 			if (me == maze.end) {
 				solved = true;
@@ -138,17 +171,16 @@ class MazeSolver {
 
 			maze.grid[me.y][me.x].state = NodeVisitState.VISITED;
 
-			other = Coord2D(me.x, me.y - 1);
-			addNeighbor(me, other, pending);
+			foreach (dir; Coord2DDir.min .. Coord2DDir.max + 1) {
+				Coord2DDir d = cast(Coord2DDir)dir;
+				Coord2D other;
 
-			other = Coord2D(me.x, me.y + 1);
-			addNeighbor(me, other, pending);
+				if (!canMove(me, d))
+					continue;
 
-			other = Coord2D(me.x - 1, me.y);
-			addNeighbor(me, other, pending);
-
-			other = Coord2D(me.x + 1, me.y);
-			addNeighbor(me, other, pending);
+				other = move(me, d);
+				addNeighbor(me, other, pending);
+			}
 
 			gui.pixelColor(me, colorvisited);
 			gui.handlePendingEvents();
@@ -206,6 +238,10 @@ class MazeSolver {
 		UNVISITED,
 		PENDING,
 		VISITED
+	}
+
+	private enum Coord2DDir {
+		EAST, NORTH, WEST, SOUTH
 	}
 
 	private struct Node {
