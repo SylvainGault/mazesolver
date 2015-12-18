@@ -75,12 +75,19 @@ import std.string : toStringz, fromStringz;
 import std.conv : to;
 import sdl.sdl;
 import sdl.image;
+import sdl.ttf;
 
 class SDLGui : Gui {
 	this() {
-		int err = SDL_Init(SDL_InitFlags.VIDEO);
-		sdl_enforce(err == 0);
+		int err;
+
 		wantquit = false;
+
+		err = SDL_Init(SDL_InitFlags.VIDEO);
+		sdl_enforce(err == 0);
+
+		err = TTF_Init();
+		sdl_enforce(err == 0);
 	}
 
 
@@ -89,7 +96,13 @@ class SDLGui : Gui {
 		if (image != null)
 			SDL_FreeSurface(image);
 		image = null;
+
+		if (font != null)
+			TTF_CloseFont(font);
+		font = null;
+
 		IMG_Quit();
+		TTF_Quit();
 		SDL_Quit();
 	}
 
@@ -126,6 +139,9 @@ class SDLGui : Gui {
 		                          image.format.BitsPerPixel,
 		                          SDL_InternalFlags.ANYFORMAT);
 		sdl_enforce(screen != null);
+
+		font = TTF_OpenFont("data/DejaVuSansMono-Bold.ttf", 28);
+		sdl_enforce(font != null);
 
 		/*
 		 * Optimize the image now we have a display (and avoid unaligned
@@ -345,10 +361,13 @@ class SDLGui : Gui {
 
 
 	private static immutable int FPS = 60;
+	private static immutable SDL_Color textColor = SDL_Color(0, 0, 127);
 	private SDL_Surface *image;
 	private SDL_Surface *screen;
 	private bool wantquit;
 	private MouseButtonEvent *buttonevent;
 	private Coord2D updateMin, updateMax;
 	private uint32_t lastupdate;
+
+	private TTF_Font *font;
 }
