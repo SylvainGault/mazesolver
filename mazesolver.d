@@ -247,7 +247,7 @@ class MainCoordinator {
 
 		filename = args[1];
 
-		gui.setTitle("Maze Solver");
+		gui.windowTitle = "Maze Solver";
 		gui.loadImage(filename);
 		gui.start();
 		setStartEnd();
