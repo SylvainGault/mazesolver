@@ -206,6 +206,30 @@ class MazeSolver {
 
 
 
+	@property Coord2D startCoord() {
+		return maze.start;
+	}
+
+
+
+	@property Coord2D startCoord(Coord2D c) {
+		return maze.start = c;
+	}
+
+
+
+	@property Coord2D endCoord() {
+		return maze.end;
+	}
+
+
+
+	@property Coord2D endCoord(Coord2D c) {
+		return maze.end = c;
+	}
+
+
+
 	void dostuff() {
 		StopWatch timer;
 		Duration dur;
