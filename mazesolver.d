@@ -206,7 +206,7 @@ class MazeSolver {
 
 
 
-	private void dostuff() {
+	void dostuff() {
 		StopWatch timer;
 		Duration dur;
 
@@ -217,6 +217,22 @@ class MazeSolver {
 		dur = cast(Duration)timer.peek;
 		writeln(dur.total!"hnsecs" / cast(real)(seconds(1).total!"hnsecs"));
 	}
+
+
+
+
+
+
+	private alias HeapCoord2D = Heap!Coord2D;
+
+	private Maze maze;
+}
+
+
+
+class MainCoordinator {
+	public MazeSolver solver;
+	public Gui gui;
 
 
 
@@ -233,18 +249,12 @@ class MazeSolver {
 		gui.setTitle("Maze Solver");
 		gui.loadImage(filename);
 		gui.start();
-		dostuff();
+		solver.dostuff();
 		gui.handlePendingEventsWait();
 		gui.finish();
 
 		return 0;
 	}
-
-
-
-	private alias HeapCoord2D = Heap!Coord2D;
-
-	private Maze maze;
 }
 
 
@@ -252,14 +262,18 @@ class MazeSolver {
 int main(string[] args) {
 	Gui gui;
 	MazeSolver solver;
+	MainCoordinator coordinator;
 
 	/* Instanciate the components. */
 	gui = new SDLGui();
 	solver = new MazeSolver();
+	coordinator = new MainCoordinator();
 
 	/* Connect the components. */
 	solver.gui = gui;
+	coordinator.solver = solver;
+	coordinator.gui = gui;
 
 	/* Run the main components. */
-	return solver.run(args);
+	return coordinator.run(args);
 }
