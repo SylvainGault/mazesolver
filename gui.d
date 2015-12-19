@@ -140,7 +140,7 @@ class SDLGui : Gui {
 		                          SDL_InternalFlags.ANYFORMAT);
 		sdl_enforce(screen != null);
 
-		font = TTF_OpenFont("data/DejaVuSansMono-Bold.ttf", 28);
+		font = TTF_OpenFont("data/DejaVuSansMono-Bold.ttf", fontSize);
 		sdl_enforce(font != null);
 
 		/*
@@ -362,6 +362,8 @@ class SDLGui : Gui {
 
 	private static immutable int FPS = 60;
 	private static immutable SDL_Color textColor = SDL_Color(0, 0, 127);
+	private static immutable int fontSize = 18;
+
 	private SDL_Surface *image;
 	private SDL_Surface *screen;
 	private bool wantquit;
