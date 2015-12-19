@@ -25,6 +25,9 @@ interface Gui {
 	@property string windowTitle() const;
 	@property string windowTitle(string title);
 
+	/* Display a message to the user. */
+	void displayMessage(string msg);
+
 	/* Load an image. */
 	void loadImage(string filename);
 
@@ -120,6 +123,32 @@ class SDLGui : Gui {
 	@property string windowTitle(string title) {
 		SDL_WM_SetCaption(title.toStringz, null);
 		return title;
+	}
+
+
+
+	void displayMessage(string msg) {
+		int err;
+
+		if (textSurf != null) {
+			/* Clear any previous text. */
+			err = SDL_BlitSurface(scratch, null, screen, null);
+			sdl_enforce(err == 0);
+
+			/* Say we've modified the area were was the text. */
+			mergeUpdate(textPos, Coord2D(textSurf.w, textSurf.h));
+
+			SDL_FreeSurface(textSurf);
+			textSurf = null;
+		}
+
+		textSurf = TTF_RenderUTF8_Blended(font, msg.toStringz, textColor);
+		sdl_enforce(textSurf != null);
+
+		/* /!\ Do not optimize textSurf as it contains an alpha channel. */
+
+		mergeUpdate(textPos, Coord2D(textSurf.w, textSurf.h));
+		updateDisplay(true, true);
 	}
 
 
@@ -341,6 +370,19 @@ class SDLGui : Gui {
 		err = SDL_BlitSurface(scratch, &rect, screen, &rect);
 		sdl_enforce(err == 0);
 
+		if (textSurf != null) {
+			SDL_Rect textRect;
+			textRect.x = cast(typeof(textRect.x))textPos.x;
+			textRect.y = cast(typeof(textRect.y))textPos.y;
+			textRect.w = cast(typeof(textRect.w))textSurf.w;
+			textRect.h = cast(typeof(textRect.h))textSurf.h;
+
+			if (intersectRect(&textRect, &rect)) {
+				err = SDL_BlitSurface(textSurf, &textRect, screen, null);
+				sdl_enforce(err == 0);
+			}
+		}
+
 		SDL_UpdateRect(screen, rect.x, rect.y, rect.w, rect.h);
 
 		updateMin = typeof(updateMin).init;
@@ -357,6 +399,19 @@ class SDLGui : Gui {
 
 		SDL_FreeSurface(input);
 		return output;
+	}
+
+
+
+	private static bool intersectRect(const SDL_Rect *r1, const SDL_Rect *r2) {
+		static bool intersect1D(int a1, int a2, int b1, int b2) {
+			return b1 < a2 && b2 > a1;
+		}
+
+		if (!intersect1D(r1.x, r1.x + r1.w, r2.x, r2.x + r2.w))
+			return false;
+
+		return intersect1D(r1.y, r1.y + r1.h, r2.y, r2.y + r2.h);
 	}
 
 
@@ -394,6 +449,7 @@ class SDLGui : Gui {
 
 	private static immutable int FPS = 60;
 	private static immutable SDL_Color textColor = SDL_Color(0, 0, 127);
+	private static immutable Coord2D textPos = Coord2D(0, 0);
 	private static immutable int fontSize = 18;
 
 	private bool wantquit;
@@ -407,6 +463,9 @@ class SDLGui : Gui {
 
 	/* Input image + progression. */
 	private SDL_Surface* scratch;
+
+	/* Surface for the text to be displayed. */
+	private SDL_Surface* textSurf;
 
 	/* Merge all the surfaces to be displayed. */
 	private SDL_Surface* screen;
