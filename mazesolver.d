@@ -57,6 +57,9 @@ class MazeSolver {
 		dur = cast(Duration)timer.peek;
 		dursec = dur.total!"hnsecs" / cast(real)(seconds(1).total!"hnsecs");
 		gui.displayMessage("Done in " ~ to!string(dursec) ~ " seconds");
+
+		/* One last screen update. */
+		gui.updateDisplay(true, false);
 	}
 
 
@@ -241,8 +244,6 @@ class MazeSolver {
 
 		if (solved)
 			tracePath();
-
-		gui.updateDisplay(true, false);
 	}
 
 
