@@ -48,13 +48,15 @@ class MazeSolver {
 	void run() {
 		StopWatch timer;
 		Duration dur;
+		real dursec;
 
 		initMaze();
 		timer.start();
 		solveMaze();
 		timer.stop();
 		dur = cast(Duration)timer.peek;
-		writeln(dur.total!"hnsecs" / cast(real)(seconds(1).total!"hnsecs"));
+		dursec = dur.total!"hnsecs" / cast(real)(seconds(1).total!"hnsecs");
+		gui.displayMessage("Done in " ~ to!string(dursec) ~ " seconds");
 	}
 
 
@@ -241,7 +243,6 @@ class MazeSolver {
 			tracePath();
 
 		gui.updateDisplay(true, false);
-		writeln("Done");
 	}
 
 
@@ -337,6 +338,7 @@ class MainCoordinator {
 		gui.loadImage(filename);
 		gui.start();
 		setStartEnd();
+		gui.displayMessage("Searching...");
 		solver.run();
 		gui.handlePendingEventsWait();
 		gui.finish();
@@ -349,7 +351,7 @@ class MainCoordinator {
 	private void setStartEnd() {
 		MouseButtonEvent *mbe;
 
-		writeln("Click starting point");
+		gui.displayMessage("Click starting point");
 		while ((mbe = gui.lastClick()) == null && !gui.quit)
 			gui.handleOneEventWait();
 
@@ -357,9 +359,8 @@ class MainCoordinator {
 			return;
 
 		solver.startCoord = mbe.coord;
-		solver.startCoord.writeln;
 
-		writeln("Click destination point");
+		gui.displayMessage("Click destination point");
 		while ((mbe = gui.lastClick()) == null && !gui.quit)
 			gui.handleOneEventWait();
 
@@ -367,8 +368,6 @@ class MainCoordinator {
 			return;
 
 		solver.endCoord = mbe.coord;
-		solver.endCoord.writeln;
-
 	}
 }
 
