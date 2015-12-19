@@ -132,7 +132,6 @@ class SDLGui : Gui {
 
 
 	void start() {
-		SDL_Surface *tmp;
 		int err;
 
 		screen = SDL_SetVideoMode(image.w, image.h,
@@ -147,11 +146,8 @@ class SDLGui : Gui {
 		 * Optimize the image now we have a display (and avoid unaligned
 		 * memory access).
 		 */
-		tmp = image;
-		image = SDL_DisplayFormat(tmp);
+		image = optimizeSurface(image);
 		sdl_enforce(image != null);
-
-		SDL_FreeSurface(tmp);
 
 		err = SDL_BlitSurface(image, null, screen, null);
 		sdl_enforce(err == 0);
@@ -338,6 +334,17 @@ class SDLGui : Gui {
 		updateMin = typeof(updateMin).init;
 		updateMax = typeof(updateMax).init;
 		lastupdate = now;
+	}
+
+
+
+	private static SDL_Surface* optimizeSurface(SDL_Surface* input) {
+		SDL_Surface* output;
+		output = SDL_DisplayFormat(input);
+		sdl_enforce(output != null);
+
+		SDL_FreeSurface(input);
+		return output;
 	}
 
 
