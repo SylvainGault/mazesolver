@@ -346,6 +346,19 @@ class SDLGui : Gui {
 		assert(size.x > 0);
 		assert(size.y > 0);
 
+		/* Empty new update zone. */
+		if (size.x == 0 || size.y == 0)
+			return;
+
+		/* Empty current update zone. */
+		if (updateMin.x == updateMax.x || updateMin.y == updateMax.y) {
+			updateMin = coord;
+			updateMax.x = coord.x + size.x;
+			updateMax.y = coord.y + size.y;
+			return;
+		}
+
+		/* General case. */
 		updateMin.x = min(updateMin.x, coord.x);
 		updateMin.y = min(updateMin.y, coord.y);
 		updateMax.x = max(updateMax.x, coord.x + size.x);
