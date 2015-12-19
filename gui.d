@@ -149,7 +149,11 @@ class SDLGui : Gui {
 		image = optimizeSurface(image);
 		sdl_enforce(image != null);
 
-		err = SDL_BlitSurface(image, null, screen, null);
+		/* No need to optimize scratch. */
+		scratch = SDL_ConvertSurface(image, image.format, image.flags);
+		sdl_enforce(scratch != null);
+
+		err = SDL_BlitSurface(scratch, null, screen, null);
 		sdl_enforce(err == 0);
 
 		updateDisplay(true, false);
@@ -290,19 +294,19 @@ class SDLGui : Gui {
 		Color c;
 		void* pixeldata;
 		uint pixel;
-		immutable ubyte bytepp = screen.format.BytesPerPixel;
+		immutable ubyte bytepp = scratch.format.BytesPerPixel;
 
 		assert(bytepp <= typeof(pixel).sizeof);
-		assert(coord.x < screen.w);
-		assert(coord.y < screen.h);
+		assert(coord.x < scratch.w);
+		assert(coord.y < scratch.h);
 
-		pixel = SDL_MapRGB(screen.format, color.r, color.g, color.b);
+		pixel = SDL_MapRGB(scratch.format, color.r, color.g, color.b);
 
-		SDL_LockSurface(screen);
-		pixeldata = screen.pixels;
-		pixeldata += (coord.y * screen.w + coord.x) * bytepp;
+		SDL_LockSurface(scratch);
+		pixeldata = scratch.pixels;
+		pixeldata += (coord.y * scratch.w + coord.x) * bytepp;
 		*cast(typeof(pixel)*)pixeldata = pixel;
-		SDL_UnlockSurface(screen);
+		SDL_UnlockSurface(scratch);
 
 		mergeUpdate(coord, Coord2D(1, 1));
 	}
@@ -312,6 +316,7 @@ class SDLGui : Gui {
 	void updateDisplay(bool forced = false, bool selective = true) {
 		SDL_Rect rect;
 		uint32_t now;
+		int err;
 
 		now = SDL_GetTicks();
 		if (!forced && now < lastupdate + 1000 / FPS)
@@ -321,13 +326,20 @@ class SDLGui : Gui {
 			if (updateMax.x == 0 || updateMax.y == 0)
 				return;
 
-			rect.x = cast(short)updateMin.x;
-			rect.y = cast(short)updateMin.y;
-			rect.w = cast(short)(updateMax.x - updateMin.x);
-			rect.h = cast(short)(updateMax.y - updateMin.y);
+			rect.x = cast(typeof(rect.x))updateMin.x;
+			rect.y = cast(typeof(rect.y))updateMin.y;
+			rect.w = cast(typeof(rect.w))(updateMax.x - updateMin.x);
+			rect.h = cast(typeof(rect.h))(updateMax.y - updateMin.y);
 		} else {
-			rect = SDL_Rect(0, 0, 0, 0);
+			rect.x = 0;
+			rect.y = 0;
+			rect.w = cast(typeof(rect.w))screen.w;
+			rect.h = cast(typeof(rect.w))screen.h;
 		}
+
+
+		err = SDL_BlitSurface(scratch, &rect, screen, &rect);
+		sdl_enforce(err == 0);
 
 		SDL_UpdateRect(screen, rect.x, rect.y, rect.w, rect.h);
 
@@ -384,12 +396,18 @@ class SDLGui : Gui {
 	private static immutable SDL_Color textColor = SDL_Color(0, 0, 127);
 	private static immutable int fontSize = 18;
 
-	private SDL_Surface *image;
-	private SDL_Surface *screen;
 	private bool wantquit;
-	private MouseButtonEvent *buttonevent;
+	private MouseButtonEvent* buttonevent;
 	private Coord2D updateMin, updateMax;
 	private uint32_t lastupdate;
+	private TTF_Font* font;
 
-	private TTF_Font *font;
+	/* Input image. */
+	private SDL_Surface* image;
+
+	/* Input image + progression. */
+	private SDL_Surface* scratch;
+
+	/* Merge all the surfaces to be displayed. */
+	private SDL_Surface* screen;
 }
