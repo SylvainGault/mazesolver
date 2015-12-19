@@ -148,7 +148,7 @@ class SDLGui : Gui {
 		/* /!\ Do not optimize textSurf as it contains an alpha channel. */
 
 		mergeUpdate(textPos, Coord2D(textSurf.w, textSurf.h));
-		updateDisplay(true, true);
+		updateDisplay();
 	}
 
 
