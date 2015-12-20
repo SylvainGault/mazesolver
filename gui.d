@@ -131,8 +131,14 @@ class SDLGui : Gui {
 		int err;
 
 		if (textSurf != null) {
+			SDL_Rect rect;
+			rect.x = cast(typeof(rect.x))textPos.x;
+			rect.y = cast(typeof(rect.y))textPos.y;
+			rect.w = cast(typeof(rect.w))textSurf.w;
+			rect.h = cast(typeof(rect.h))textSurf.h;
+
 			/* Clear any previous text. */
-			err = SDL_BlitSurface(scratch, null, screen, null);
+			err = SDL_BlitSurface(scratch, &rect, screen, &rect);
 			sdl_enforce(err == 0);
 
 			/* Say we've modified the area were was the text. */
