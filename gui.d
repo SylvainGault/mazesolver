@@ -25,8 +25,8 @@ interface Gui {
 	@property string windowTitle() const;
 	@property string windowTitle(string title);
 
-	/* Display a message to the user. */
-	void displayMessage(string msg);
+	/* Display a message to the user for a given time in ms (0 = infinite). */
+	void displayMessage(string msg, uint time = 3000);
 
 	/* Remove the currently displayed message. */
 	void removeMessage();
@@ -130,7 +130,7 @@ class SDLGui : Gui {
 
 
 
-	void displayMessage(string msg) {
+	void displayMessage(string msg, uint time = 3000) {
 		removeMessage();
 
 		textSurf = TTF_RenderUTF8_Blended(font, msg.toStringz, textColor);
@@ -140,6 +140,16 @@ class SDLGui : Gui {
 
 		mergeUpdate(textPos, Coord2D(textSurf.w, textSurf.h));
 		updateDisplay();
+
+		/* Remember to remove that text (or not). */
+
+		if (time == 0) {
+			textHasTimeout = false;
+			return;
+		}
+
+		textHasTimeout = true;
+		textTimeout = SDL_GetTicks() + time;
 	}
 
 
@@ -165,6 +175,8 @@ class SDLGui : Gui {
 
 		SDL_FreeSurface(textSurf);
 		textSurf = null;
+		textTimeout = 0;
+		textHasTimeout = false;
 	}
 
 
@@ -215,20 +227,34 @@ class SDLGui : Gui {
 
 	void handleOneEvent() {
 		SDL_Event e;
+
+		/* Consider text timeout as an event. */
 		if (SDL_PollEvent(&e))
 			handle_event(e);
+		else
+			checkTimeoutText();
 	}
 
 
 
 	void handleOneEventWait() {
 		SDL_Event e;
-		int err = SDL_WaitEvent(&e);
+		int err;
 
-		sdl_enforce(err == 1);
+		if (textHasTimeout)
+			err = waitEventTimeout(&e, textTimeout);
+		else
+			err = SDL_WaitEvent(&e);
 
-		if (err)
+		sdl_enforce(err != 0);
+
+		/* An event arrived. */
+		if (err == 1)
 			handle_event(e);
+
+		/* Text has timeouted. */
+		if (err == -1)
+			checkTimeoutText();
 	}
 
 
@@ -238,17 +264,30 @@ class SDLGui : Gui {
 
 		while (SDL_PollEvent(&e))
 			handle_event(e);
+
+		checkTimeoutText();
 	}
 
 
 
 	void handlePendingEventsWait() {
 		SDL_Event e;
+		int err;
 
-		while (!quit && SDL_WaitEvent(&e))
-			handle_event(e);
+		while (!quit) {
+			if (textHasTimeout)
+				err = waitEventTimeout(&e, textTimeout);
+			else
+				err = SDL_WaitEvent(&e);
 
-		sdl_enforce(quit);
+			sdl_enforce(err != 0);
+
+			if (err == 1)
+				handle_event(e);
+
+			if (err == -1)
+				checkTimeoutText();
+		}
 	}
 
 
@@ -457,6 +496,28 @@ class SDLGui : Gui {
 
 
 
+	private void checkTimeoutText() {
+		if (textHasTimeout && SDL_GetTicks() > textTimeout)
+			removeMessage();
+	}
+
+
+
+	private int waitEventTimeout(SDL_Event* e, uint timeout) {
+		int err;
+
+		while (SDL_GetTicks() < timeout) {
+			err = SDL_PollEvent(e);
+			if (err == 1)
+				return 1;
+			SDL_Delay(10);
+		}
+
+		return -1;
+	}
+
+
+
 	private static void sdl_enforce(bool cond) {
 		assert(cond, SDL_GetError().fromStringz);
 	}
@@ -473,6 +534,8 @@ class SDLGui : Gui {
 	private Coord2D updateMin, updateMax;
 	private uint32_t lastupdate;
 	private TTF_Font* font;
+	private bool textHasTimeout;
+	private uint textTimeout;
 
 	/* Input image. */
 	private SDL_Surface* image;
