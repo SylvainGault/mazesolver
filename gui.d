@@ -28,6 +28,9 @@ interface Gui {
 	/* Display a message to the user. */
 	void displayMessage(string msg);
 
+	/* Remove the currently displayed message. */
+	void removeMessage();
+
 	/* Load an image. */
 	void loadImage(string filename);
 
@@ -128,25 +131,7 @@ class SDLGui : Gui {
 
 
 	void displayMessage(string msg) {
-		int err;
-
-		if (textSurf != null) {
-			SDL_Rect rect;
-			rect.x = cast(typeof(rect.x))textPos.x;
-			rect.y = cast(typeof(rect.y))textPos.y;
-			rect.w = cast(typeof(rect.w))textSurf.w;
-			rect.h = cast(typeof(rect.h))textSurf.h;
-
-			/* Clear any previous text. */
-			err = SDL_BlitSurface(scratch, &rect, screen, &rect);
-			sdl_enforce(err == 0);
-
-			/* Say we've modified the area were was the text. */
-			mergeUpdate(textPos, Coord2D(textSurf.w, textSurf.h));
-
-			SDL_FreeSurface(textSurf);
-			textSurf = null;
-		}
+		removeMessage();
 
 		textSurf = TTF_RenderUTF8_Blended(font, msg.toStringz, textColor);
 		sdl_enforce(textSurf != null);
@@ -155,6 +140,31 @@ class SDLGui : Gui {
 
 		mergeUpdate(textPos, Coord2D(textSurf.w, textSurf.h));
 		updateDisplay();
+	}
+
+
+
+	void removeMessage() {
+		int err;
+		SDL_Rect rect;
+
+		if (textSurf == null)
+			return;
+
+		rect.x = cast(typeof(rect.x))textPos.x;
+		rect.y = cast(typeof(rect.y))textPos.y;
+		rect.w = cast(typeof(rect.w))textSurf.w;
+		rect.h = cast(typeof(rect.h))textSurf.h;
+
+		/* Clear any previous text. */
+		err = SDL_BlitSurface(scratch, &rect, screen, &rect);
+		sdl_enforce(err == 0);
+
+		/* Say we've modified the area where was the text. */
+		mergeUpdate(textPos, Coord2D(textSurf.w, textSurf.h));
+
+		SDL_FreeSurface(textSurf);
+		textSurf = null;
 	}
 
 
