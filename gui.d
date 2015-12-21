@@ -191,9 +191,8 @@ class SDLGui : Gui {
 	void start() {
 		int err;
 
-		screen = SDL_SetVideoMode(image.w, image.h,
-		                          image.format.BitsPerPixel,
-		                          SDL_InternalFlags.ANYFORMAT);
+		screen = SDL_SetVideoMode(image.w, image.h, 0,
+		                          SDL_VideoFlags.ANYFORMAT);
 		sdl_enforce(screen != null);
 
 		font = TTF_OpenFont("data/DejaVuSansMono-Bold.ttf", fontSize);
