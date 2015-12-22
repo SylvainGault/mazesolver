@@ -263,7 +263,7 @@ class MazeSolver {
 		cs = gui.pixelColor(maze.start);
 		ce = gui.pixelColor(maze.end);
 
-		assert(cs == ce);
+		assert(cs == ce, "Pixels are not the same color");
 
 		size = gui.imageSize();
 
