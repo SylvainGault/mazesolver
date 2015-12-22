@@ -303,11 +303,9 @@ class SDLGui : Gui {
 		switch (event.type) {
 		case SDL_EventType.QUIT:
 			wantquit = true;
-			goto default;
+			break;
 
 		case SDL_EventType.MOUSEBUTTONUP:
-			//writeln(event.type, " ", event.button);
-
 			buttonevent = new MouseButtonEvent();
 			buttonevent.button = event.button.button;
 			buttonevent.state = cast(ButtonState)event.button.state;
@@ -321,7 +319,6 @@ class SDLGui : Gui {
 			break;
 
 		default:
-			//writeln(event.type);
 			break;
 		}
 	}
