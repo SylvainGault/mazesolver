@@ -8,7 +8,7 @@ LIBS = sdl SDL_image SDL_ttf
 #DEBUGOPT = -O3 -frelease
 DEBUGOPT = -ggdb3
 
-DFLAGS = -Wall -Wextra -Wno-uninitialized -pedantic $(DEBUGOPT)
+DFLAGS = -Wall -Wextra -Wno-uninitialized -Wdeprecated -pedantic $(DEBUGOPT)
 LDFLAGS = -use-ld=gold $(DEBUGOPT)
 LIBFLAGS = $(shell pkg-config --libs $(LIBS))
 
