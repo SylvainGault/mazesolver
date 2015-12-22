@@ -86,7 +86,7 @@ class BinaryHeap(T, alias less = "a < b") : Heap!T {
 
 
 
-	string toString() const {
+	override string toString() const {
 		import std.conv : to;
 		return to!string(data);
 	}
