@@ -340,6 +340,7 @@ class MainCoordinator {
 		gui.start();
 		setStartEnd();
 		gui.displayMessage("Searching...");
+		gui.updateDisplay(true);
 		solver.run();
 		gui.handlePendingEventsWait();
 		gui.finish();
@@ -353,8 +354,11 @@ class MainCoordinator {
 		MouseButtonEvent *mbe;
 
 		gui.displayMessage("Click starting point");
-		while ((mbe = gui.lastClick()) == null && !gui.quit)
+		gui.updateDisplay(true);
+		while ((mbe = gui.lastClick()) == null && !gui.quit) {
 			gui.handleOneEventWait();
+			gui.updateDisplay(true);
+		}
 
 		if (gui.quit)
 			return;
@@ -362,8 +366,11 @@ class MainCoordinator {
 		solver.startCoord = mbe.coord;
 
 		gui.displayMessage("Click destination point");
-		while ((mbe = gui.lastClick()) == null && !gui.quit)
+		gui.updateDisplay(true);
+		while ((mbe = gui.lastClick()) == null && !gui.quit) {
 			gui.handleOneEventWait();
+			gui.updateDisplay(true);
+		}
 
 		if (gui.quit)
 			return;
