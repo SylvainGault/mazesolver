@@ -314,8 +314,17 @@ class SDLGui : Gui {
 			break;
 
 		case SDL_EventType.KEYUP:
-			if (event.key.keysym.sym == SDLKey.SDLK_q)
-				goto case SDL_EventType.QUIT;
+			switch (event.key.keysym.sym) {
+			/* Quit */
+			case SDLKey.SDLK_q:
+				wantquit = true;
+				break;
+
+			default:
+				/* TODO: Print help? */
+				break;
+			}
+
 			break;
 
 		default:
