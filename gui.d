@@ -322,6 +322,21 @@ class SDLGui : Gui {
 
 
 
+	private void handleEventKeyUp(ref SDL_KeyboardEvent e) {
+		switch (e.keysym.sym) {
+		/* Quit */
+		case SDLKey.SDLK_q:
+			wantquit = true;
+			break;
+
+		default:
+			/* TODO: Print help? */
+			break;
+		}
+	}
+
+
+
 	private void handleEvent(ref SDL_Event event) {
 		switch (event.type) {
 		case SDL_EventType.QUIT:
@@ -333,17 +348,7 @@ class SDLGui : Gui {
 			break;
 
 		case SDL_EventType.KEYUP:
-			switch (event.key.keysym.sym) {
-			/* Quit */
-			case SDLKey.SDLK_q:
-				wantquit = true;
-				break;
-
-			default:
-				/* TODO: Print help? */
-				break;
-			}
-
+			handleEventKeyUp(event.key);
 			break;
 
 		default:
