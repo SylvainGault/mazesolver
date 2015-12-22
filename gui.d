@@ -75,6 +75,15 @@ interface Gui {
 }
 
 
+
+interface GuiCallbacks {
+	void startCoord(Coord2D coord);
+	void endCoord(Coord2D coord);
+	void start();
+}
+
+
+
 import std.stdio;
 import std.algorithm : min, max;
 import std.string : toStringz, fromStringz;
@@ -84,6 +93,10 @@ import sdl.image;
 import sdl.ttf;
 
 class SDLGui : Gui {
+	public GuiCallbacks callbacks;
+
+
+
 	this() {
 		int err;
 
