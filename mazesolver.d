@@ -370,7 +370,15 @@ class MainCoordinator : GuiCallbacks {
 		gui.windowTitle = "Maze Solver";
 		gui.loadImage(filename);
 		gui.start();
-		setStartEnd();
+
+		while (!wantStart && !gui.quit) {
+			gui.updateDisplay();
+			gui.handleOneEventWait();
+		}
+
+		if (gui.quit)
+			return 0;
+
 		gui.displayMessage("Searching...");
 		gui.updateDisplay(true);
 		solver.run();
@@ -378,36 +386,6 @@ class MainCoordinator : GuiCallbacks {
 		gui.finish();
 
 		return 0;
-	}
-
-
-
-	private void setStartEnd() {
-		MouseButtonEvent *mbe;
-
-		gui.displayMessage("Click starting point");
-		gui.updateDisplay(true);
-		while ((mbe = gui.lastClick()) == null && !gui.quit) {
-			gui.handleOneEventWait();
-			gui.updateDisplay(true);
-		}
-
-		if (gui.quit)
-			return;
-
-		solver.startCoord = mbe.coord;
-
-		gui.displayMessage("Click destination point");
-		gui.updateDisplay(true);
-		while ((mbe = gui.lastClick()) == null && !gui.quit) {
-			gui.handleOneEventWait();
-			gui.updateDisplay(true);
-		}
-
-		if (gui.quit)
-			return;
-
-		solver.endCoord = mbe.coord;
 	}
 
 
