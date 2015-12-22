@@ -58,9 +58,6 @@ interface Gui {
 	/* Indicate whether the user want to quit. */
 	@property bool quit();
 
-	/* Return the informations about the last click performed. */
-	MouseButtonEvent *lastClick();
-
 	/* Return the image size as a coordinate. */
 	Coord2D imageSize();
 
@@ -315,11 +312,6 @@ class SDLGui : Gui {
 	private void handleEventMouseUp(ref SDL_MouseButtonEvent e) {
 		Coord2D coord = Coord2D(e.x, e.y);
 
-		buttonevent = new MouseButtonEvent();
-		buttonevent.button = e.button;
-		buttonevent.state = cast(ButtonState)e.state;
-		buttonevent.coord = coord;
-
 		switch (state) {
 		case State.START_COORD:
 			callbacks.startCoord(coord);
@@ -395,13 +387,6 @@ class SDLGui : Gui {
 
 	bool quit() {
 		return wantquit;
-	}
-
-
-	MouseButtonEvent *lastClick() {
-		MouseButtonEvent *ret = buttonevent;
-		buttonevent = null;
-		return ret;
 	}
 
 
@@ -598,7 +583,6 @@ class SDLGui : Gui {
 	private static immutable int fontSize = 18;
 
 	private bool wantquit;
-	private MouseButtonEvent* buttonevent;
 	private Coord2D updateMin, updateMax;
 	private uint32_t lastupdate;
 	private TTF_Font* font;
