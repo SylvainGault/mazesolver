@@ -359,6 +359,11 @@ class SDLGui : Gui {
 			state = State.END_COORD;
 			break;
 
+		case SDLKey.SDLK_SPACE:
+		case SDLKey.SDLK_RETURN:
+			callbacks.start();
+			break;
+
 		default:
 			/* TODO: Print help? */
 			break;
