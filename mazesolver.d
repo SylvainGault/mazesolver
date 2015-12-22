@@ -319,12 +319,44 @@ class MazeSolver {
 
 
 
-class MainCoordinator {
+class MainCoordinator : GuiCallbacks {
 	public MazeSolver solver;
 	public Gui gui;
 
 
 
+	/* GUI Callbacks */
+	void startCoord(Coord2D coord) {
+		hasStart = true;
+		solver.startCoord = coord;
+		writeln("Has start");
+	}
+
+	void endCoord(Coord2D coord) {
+		hasEnd = true;
+		solver.endCoord = coord;
+		writeln("Has end");
+	}
+
+	void start() {
+		if (!hasStart) {
+			gui.displayMessage("Press S");
+			gui.updateDisplay(true);
+			return;
+		}
+
+		if (!hasEnd) {
+			gui.displayMessage("Press E");
+			gui.updateDisplay(true);
+			return;
+		}
+
+		wantStart = true;
+	}
+
+
+
+	/* Only public method of MainCoordinator */
 	int run(string[] args) {
 		string filename;
 
@@ -377,6 +409,12 @@ class MainCoordinator {
 
 		solver.endCoord = mbe.coord;
 	}
+
+
+
+	private bool hasStart;
+	private bool hasEnd;
+	private bool wantStart;
 }
 
 
