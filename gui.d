@@ -313,11 +313,30 @@ class SDLGui : Gui {
 
 
 	private void handleEventMouseUp(ref SDL_MouseButtonEvent e) {
+		Coord2D coord = Coord2D(e.x, e.y);
+
 		buttonevent = new MouseButtonEvent();
 		buttonevent.button = e.button;
 		buttonevent.state = cast(ButtonState)e.state;
-		buttonevent.coord.x = e.x;
-		buttonevent.coord.y = e.y;
+		buttonevent.coord = coord;
+
+		switch (state) {
+		case State.START_COORD:
+			callbacks.startCoord(coord);
+			removeMessage();
+			state = State.NONE;
+			break;
+
+		case State.END_COORD:
+			callbacks.endCoord(coord);
+			removeMessage();
+			state = State.NONE;
+			break;
+
+		case State.NONE:
+		default:
+			break;
+		}
 	}
 
 
@@ -327,6 +346,17 @@ class SDLGui : Gui {
 		/* Quit */
 		case SDLKey.SDLK_q:
 			wantquit = true;
+			break;
+
+		/* Start and destination coordinate */
+		case SDLKey.SDLK_s:
+			displayMessage("Click starting point");
+			state = State.START_COORD;
+			break;
+
+		case SDLKey.SDLK_e:
+			displayMessage("Click destination point");
+			state = State.END_COORD;
 			break;
 
 		default:
@@ -553,6 +583,10 @@ class SDLGui : Gui {
 
 
 
+	private enum State {NONE, START_COORD, END_COORD, DISABLED};
+
+
+
 	private static immutable int FPS = 60;
 	private static immutable SDL_Color textColor = SDL_Color(0, 0, 127);
 	private static immutable Coord2D textPos = Coord2D(0, 0);
@@ -565,6 +599,7 @@ class SDLGui : Gui {
 	private TTF_Font* font;
 	private bool textHasTimeout;
 	private uint textTimeout;
+	private State state;
 
 	/* Input image. */
 	private SDL_Surface* image;
