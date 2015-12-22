@@ -242,7 +242,7 @@ class SDLGui : Gui {
 
 		/* Consider text timeout as an event. */
 		if (SDL_PollEvent(&e))
-			handle_event(e);
+			handleEvent(e);
 		else
 			checkTimeoutText();
 	}
@@ -262,7 +262,7 @@ class SDLGui : Gui {
 
 		/* An event arrived. */
 		if (err == 1)
-			handle_event(e);
+			handleEvent(e);
 
 		/* Text has timeouted. */
 		if (err == -1)
@@ -275,7 +275,7 @@ class SDLGui : Gui {
 		SDL_Event e;
 
 		while (SDL_PollEvent(&e))
-			handle_event(e);
+			handleEvent(e);
 
 		checkTimeoutText();
 	}
@@ -295,7 +295,7 @@ class SDLGui : Gui {
 			sdl_enforce(err != 0);
 
 			if (err == 1)
-				handle_event(e);
+				handleEvent(e);
 
 			if (err == -1)
 				checkTimeoutText();
@@ -312,7 +312,7 @@ class SDLGui : Gui {
 
 
 
-	private void handle_event(ref SDL_Event event) {
+	private void handleEvent(ref SDL_Event event) {
 		switch (event.type) {
 		case SDL_EventType.QUIT:
 			wantquit = true;
