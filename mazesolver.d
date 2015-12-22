@@ -420,7 +420,7 @@ class MainCoordinator : GuiCallbacks {
 
 
 int main(string[] args) {
-	Gui gui;
+	SDLGui gui;
 	MazeSolver solver;
 	MainCoordinator coordinator;
 
@@ -433,6 +433,7 @@ int main(string[] args) {
 	solver.gui = gui;
 	coordinator.solver = solver;
 	coordinator.gui = gui;
+	gui.callbacks = coordinator;
 
 	/* Run the main components. */
 	return coordinator.run(args);
