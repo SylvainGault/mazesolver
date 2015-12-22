@@ -312,6 +312,16 @@ class SDLGui : Gui {
 
 
 
+	private void handleEventMouseUp(ref SDL_MouseButtonEvent e) {
+		buttonevent = new MouseButtonEvent();
+		buttonevent.button = e.button;
+		buttonevent.state = cast(ButtonState)e.state;
+		buttonevent.coord.x = e.x;
+		buttonevent.coord.y = e.y;
+	}
+
+
+
 	private void handleEvent(ref SDL_Event event) {
 		switch (event.type) {
 		case SDL_EventType.QUIT:
@@ -319,11 +329,7 @@ class SDLGui : Gui {
 			break;
 
 		case SDL_EventType.MOUSEBUTTONUP:
-			buttonevent = new MouseButtonEvent();
-			buttonevent.button = event.button.button;
-			buttonevent.state = cast(ButtonState)event.button.state;
-			buttonevent.coord.x = event.button.x;
-			buttonevent.coord.y = event.button.y;
+			handleEventMouseUp(event.button);
 			break;
 
 		case SDL_EventType.KEYUP:
