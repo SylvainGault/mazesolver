@@ -296,6 +296,9 @@ class SDLGui : Gui {
 
 			if (err == -1)
 				checkTimeoutText();
+
+			/* Special case because this loop never return. */
+			updateDisplay(true);
 		}
 	}
 
