@@ -317,14 +317,14 @@ class SDLGui : Gui {
 
 		switch (state) {
 		case State.START_COORD:
-			callbacks.startCoord(coord);
 			removeMessage();
+			callbacks.startCoord(coord);
 			state = State.NONE;
 			break;
 
 		case State.END_COORD:
-			callbacks.endCoord(coord);
 			removeMessage();
+			callbacks.endCoord(coord);
 			state = State.NONE;
 			break;
 
