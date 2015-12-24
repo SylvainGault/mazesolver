@@ -45,18 +45,29 @@ class MazeSolver {
 
 
 
+	void stop() {
+		wantStop = true;
+	}
+
+
+
 	void run() {
 		StopWatch timer;
 		Duration dur;
 		real dursec;
 
+		wantStop = false;
 		initMaze();
 		timer.start();
 		solveMaze();
 		timer.stop();
 		dur = cast(Duration)timer.peek;
 		dursec = dur.total!"hnsecs" / cast(real)(seconds(1).total!"hnsecs");
-		gui.displayMessage("Done in " ~ to!string(dursec) ~ " seconds", 0);
+
+		if (wantStop)
+			gui.displayMessage("Stopped after " ~ to!string(dursec) ~ " seconds", 0);
+		else
+			gui.displayMessage("Done in " ~ to!string(dursec) ~ " seconds", 0);
 
 		/* One last screen update. */
 		gui.updateDisplay(true, false);
@@ -211,7 +222,7 @@ class MazeSolver {
 		maze.grid[maze.start.y][maze.start.x].dist = 0;
 		maze.grid[maze.start.y][maze.start.x].state = NodeVisitState.PENDING;
 
-		while (pending.length > 0 && !gui.quit) {
+		while (pending.length > 0 && !gui.quit && !wantStop) {
 			Coord2D me = pending.removeAny();
 
 			if (me == maze.end) {
@@ -315,6 +326,7 @@ class MazeSolver {
 
 
 	private Maze maze;
+	private bool wantStop;
 }
 
 
