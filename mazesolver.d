@@ -372,7 +372,7 @@ class MainCoordinator : GuiCallbacks {
 		gui.start();
 
 		while (!wantStart && !gui.quit) {
-			gui.updateDisplay();
+			gui.updateDisplay(true);
 			gui.handleOneEventWait();
 		}
 
