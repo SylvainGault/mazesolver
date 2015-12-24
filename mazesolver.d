@@ -327,15 +327,27 @@ class MainCoordinator : GuiCallbacks {
 
 	/* GUI Callbacks */
 	void startCoord(Coord2D coord) {
+		string msg;
+
 		hasStart = true;
 		solver.startCoord = coord;
-		writeln("Has start");
+
+		msg = "Start: " ~ to!string(coord.x);
+		msg ~= ", " ~ to!string(coord.y);
+		gui.displayMessage(msg);
+		gui.updateDisplay(true);
 	}
 
 	void endCoord(Coord2D coord) {
+		string msg;
+
 		hasEnd = true;
 		solver.endCoord = coord;
-		writeln("Has end");
+
+		msg = "Destination: " ~ to!string(coord.x);
+		msg ~= ", " ~ to!string(coord.y);
+		gui.displayMessage(msg);
+		gui.updateDisplay(true);
 	}
 
 	void start() {
