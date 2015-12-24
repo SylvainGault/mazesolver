@@ -282,7 +282,7 @@ class SDLGui : Gui {
 		SDL_Event e;
 		int err;
 
-		while (!quit) {
+		while (!wantQuit) {
 			if (textHasTimeout)
 				err = waitEventTimeout(&e, textTimeout);
 			else
@@ -390,12 +390,6 @@ class SDLGui : Gui {
 		default:
 			break;
 		}
-	}
-
-
-
-	bool quit() {
-		return wantQuit;
 	}
 
 
