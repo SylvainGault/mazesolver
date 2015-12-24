@@ -343,6 +343,7 @@ class SDLGui : Gui {
 		/* Quit */
 		case SDLKey.SDLK_q:
 			wantQuit = true;
+			callbacks.quit();
 			break;
 
 		/* Stop search */
@@ -378,6 +379,7 @@ class SDLGui : Gui {
 		switch (event.type) {
 		case SDL_EventType.QUIT:
 			wantQuit = true;
+			callbacks.quit();
 			break;
 
 		case SDL_EventType.MOUSEBUTTONUP:
