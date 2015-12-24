@@ -344,6 +344,11 @@ class SDLGui : Gui {
 			wantQuit = true;
 			break;
 
+		/* Stop search */
+		case SDLKey.SDLK_ESCAPE:
+			callbacks.stop();
+			break;
+
 		/* Start and destination coordinate */
 		case SDLKey.SDLK_s:
 			displayMessage("Click starting point");
