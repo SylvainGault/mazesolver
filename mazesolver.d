@@ -404,7 +404,7 @@ class MainCoordinator : GuiCallbacks {
 		gui.loadImage(filename);
 		gui.start();
 
-		while (!wantStart && !gui.quit && !wantQuit) {
+		while (!wantStart && !wantQuit) {
 			gui.updateDisplay(true);
 			gui.handleOneEventWait();
 		}
