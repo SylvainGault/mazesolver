@@ -97,7 +97,7 @@ class SDLGui : Gui {
 	this() {
 		int err;
 
-		wantquit = false;
+		wantQuit = false;
 
 		err = SDL_Init(SDL_InitFlags.VIDEO);
 		sdl_enforce(err == 0);
@@ -340,7 +340,7 @@ class SDLGui : Gui {
 		switch (e.keysym.sym) {
 		/* Quit */
 		case SDLKey.SDLK_q:
-			wantquit = true;
+			wantQuit = true;
 			break;
 
 		/* Start and destination coordinate */
@@ -370,7 +370,7 @@ class SDLGui : Gui {
 	private void handleEvent(ref SDL_Event event) {
 		switch (event.type) {
 		case SDL_EventType.QUIT:
-			wantquit = true;
+			wantQuit = true;
 			break;
 
 		case SDL_EventType.MOUSEBUTTONUP:
@@ -389,7 +389,7 @@ class SDLGui : Gui {
 
 
 	bool quit() {
-		return wantquit;
+		return wantQuit;
 	}
 
 
@@ -585,7 +585,7 @@ class SDLGui : Gui {
 	private static immutable Coord2D textPos = Coord2D(0, 0);
 	private static immutable int fontSize = 18;
 
-	private bool wantquit;
+	private bool wantQuit;
 	private Coord2D updateMin, updateMax;
 	private uint32_t lastupdate;
 	private TTF_Font* font;
