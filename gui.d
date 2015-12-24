@@ -77,6 +77,7 @@ interface GuiCallbacks {
 	void startCoord(Coord2D coord);
 	void endCoord(Coord2D coord);
 	void start();
+	void stop();
 }
 
 
