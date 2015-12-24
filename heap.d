@@ -24,9 +24,6 @@ interface Heap(T) {
 	/* Return the front element of the heap and remove it. */
 	T removeAny();
 
-	/* Pretty-print the heap. */
-	string toString() const;
-
 	/* Make sure the heap structure is correct. */
 	void rebuild();
 
