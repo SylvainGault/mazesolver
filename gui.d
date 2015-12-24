@@ -55,9 +55,6 @@ interface Gui {
 	/* Call start(), handlePendingEventsWait(), finish(). */
 	void run();
 
-	/* Indicate whether the user want to quit. */
-	@property bool quit();
-
 	/* Return the image size as a coordinate. */
 	Coord2D imageSize();
 
