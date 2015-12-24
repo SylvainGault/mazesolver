@@ -382,6 +382,11 @@ class MainCoordinator : GuiCallbacks {
 		solver.stop();
 	}
 
+	void quit() {
+		solver.stop();
+		wantQuit = true;
+	}
+
 
 
 	/* Only public method of MainCoordinator */
@@ -399,7 +404,7 @@ class MainCoordinator : GuiCallbacks {
 		gui.loadImage(filename);
 		gui.start();
 
-		while (!wantStart && !gui.quit) {
+		while (!wantStart && !gui.quit && !wantQuit) {
 			gui.updateDisplay(true);
 			gui.handleOneEventWait();
 		}
@@ -421,6 +426,7 @@ class MainCoordinator : GuiCallbacks {
 	private bool hasStart;
 	private bool hasEnd;
 	private bool wantStart;
+	private bool wantQuit;
 }
 
 
