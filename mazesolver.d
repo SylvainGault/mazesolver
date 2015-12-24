@@ -378,6 +378,10 @@ class MainCoordinator : GuiCallbacks {
 		wantStart = true;
 	}
 
+	void stop() {
+		solver.stop();
+	}
+
 
 
 	/* Only public method of MainCoordinator */
