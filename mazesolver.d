@@ -6,7 +6,7 @@ import std.algorithm;
 import std.traits;
 
 import gui;
-import heap;
+import heap.heap;
 
 
 

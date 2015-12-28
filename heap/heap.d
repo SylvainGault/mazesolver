@@ -1,4 +1,4 @@
-module Heap;
+module heap.heap;
 
 import std.stdio;
 import core.exception;

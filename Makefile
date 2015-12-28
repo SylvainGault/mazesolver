@@ -20,7 +20,7 @@ DEPEXT = dep
 depdir = $(dir $(1))$(DEPSDIR)
 depfile = $(call depdir,$(1))$(basename $(notdir $(1))).$(DEPEXT)
 
-SRC = $(wildcard *.d sdl/*.d)
+SRC = $(wildcard *.d heap/*.d sdl/*.d)
 OBJ = $(patsubst %.d,%.o,$(SRC))
 DEPSDIRS = $(sort $(foreach DIR,$(SRC),$(call depdir,$(DIR))))
 DEPSFILES = $(foreach DIR,$(SRC),$(call depfile,$(DIR)))
