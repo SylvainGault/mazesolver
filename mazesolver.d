@@ -7,6 +7,7 @@ import std.traits;
 
 import gui;
 import heap.binary;
+import heap.pairing;
 
 
 
@@ -214,8 +215,9 @@ class MazeSolver {
 		}
 
 		alias BinaryHeapCoord2D = BinaryHeap!(Coord2D, cmpcoord);
+		alias PairingHeapCoord2D = PairingHeap!(Coord2D, cmpcoord);
 		bool solved = false;
-		HeapCoord2D pending = new BinaryHeapCoord2D();
+		HeapCoord2D pending = new PairingHeapCoord2D();
 
 		pending.insert(maze.start);
 
