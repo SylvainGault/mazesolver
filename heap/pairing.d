@@ -139,28 +139,10 @@ class PairingHeap(T, alias less = "a < b") : Heap!T {
 		assert(other.next == other && other.prev == other);
 
 		if (comp(me.elem, other.elem)) {
-			if (other.subheap != null) {
-				me.next = other.subheap;
-				me.prev = other.subheap.prev;
-				other.subheap.prev.next = me;
-				other.subheap.prev = me;
-			} else {
-				other.subheap = me;
-			}
-
-			me.parent = other;
+			insertSubheap(other, me);
 			return other;
 		} else {
-			if (me.subheap != null) {
-				other.next = me.subheap;
-				other.prev = me.subheap.prev;
-				me.subheap.prev.next = other;
-				me.subheap.prev = other;
-			} else {
-				me.subheap = other;
-			}
-
-			other.parent = me;
+			insertSubheap(me, other);
 			return me;
 		}
 	}
@@ -202,6 +184,24 @@ class PairingHeap(T, alias less = "a < b") : Heap!T {
 			res = merge(res, h);
 
 		return res;
+	}
+
+
+
+	private static void insertSubheap(RealHeap* parent, RealHeap* child) {
+		/* Only unlinked child. */
+		assert(child.next == child && child.prev == child);
+
+		if (parent.subheap != null) {
+			child.next = parent.subheap;
+			child.prev = parent.subheap.prev;
+			parent.subheap.prev.next = child;
+			parent.subheap.prev = child;
+		} else {
+			parent.subheap = child;
+		}
+
+		child.parent = parent;
 	}
 
 
