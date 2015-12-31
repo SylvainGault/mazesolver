@@ -224,7 +224,7 @@ class MazeSolver {
 		maze.grid[maze.start.y][maze.start.x].dist = 0;
 		maze.grid[maze.start.y][maze.start.x].state = NodeVisitState.PENDING;
 
-		while (pending.length > 0 && !wantStop) {
+		while (!pending.empty && !wantStop) {
 			Coord2D me = pending.removeAny();
 
 			if (me == maze.end) {
