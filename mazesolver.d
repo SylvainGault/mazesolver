@@ -12,11 +12,6 @@ import heap.pairing;
 
 
 
-enum Color colorvisited = Color(230, 230, 230);
-enum Color colorpending = Color(127, 127, 255);
-enum Color colorpath = Color(255, 0, 0);
-
-
 class MazeSolver {
 	public Gui gui;
 
@@ -80,11 +75,11 @@ class MazeSolver {
 		Coord2D here;
 
 		here = maze.end;
-		gui.pixelColor(here, colorpath);
+		gui.pixelPath(here);
 
 		while (here != maze.start) {
 			here = maze.grid[here.y][here.x].prev;
-			gui.pixelColor(here, colorpath);
+			gui.pixelPath(here);
 		}
 	}
 
@@ -195,7 +190,7 @@ class MazeSolver {
 			nother.addtime = maze.time++;
 			nother.state = NodeVisitState.PENDING;
 			pending.insert(other);
-			gui.pixelColor(other, colorpending);
+			gui.pixelPending(other);
 		} else {
 			pending.update(other);
 		}
@@ -250,7 +245,7 @@ class MazeSolver {
 					addNeighbor(me, other, pending, 10);
 			}
 
-			gui.pixelColor(me, colorvisited);
+			gui.pixelVisited(me);
 			gui.handlePendingEvents();
 			gui.updateDisplay();
 		}

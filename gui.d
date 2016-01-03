@@ -61,8 +61,14 @@ interface Gui {
 	/* Return the color of a pixel in the image. */
 	Color pixelColor(Coord2D coord);
 
-	/* Set the color of a pixel in the image. */
-	void pixelColor(Coord2D coord, Color color);
+	/* Set the color of a pixel to mark it pending. */
+	void pixelPending(Coord2D coord);
+
+	/* Set the color of a pixel to mark as visited. */
+	void pixelVisited(Coord2D coord);
+
+	/* Set the color of a pixel to mark it as part of the shortest path. */
+	void pixelPath(Coord2D coord);
 
 	/* Update the displayed. */
 	void updateDisplay(bool forced = false, bool selective = true);
@@ -426,25 +432,20 @@ class SDLGui : Gui {
 
 
 
-	void pixelColor(Coord2D coord, Color color) {
-		Color c;
-		void* pixeldata;
-		uint pixel;
-		immutable ubyte bytepp = scratch.format.BytesPerPixel;
+	void pixelPending(Coord2D coord) {
+		pixelColor(coord, colorPending);
+	}
 
-		assert(bytepp <= typeof(pixel).sizeof);
-		assert(coord.x < scratch.w);
-		assert(coord.y < scratch.h);
 
-		pixel = SDL_MapRGB(scratch.format, color.r, color.g, color.b);
 
-		SDL_LockSurface(scratch);
-		pixeldata = scratch.pixels;
-		pixeldata += (coord.y * scratch.w + coord.x) * bytepp;
-		*cast(typeof(pixel)*)pixeldata = pixel;
-		SDL_UnlockSurface(scratch);
+	void pixelVisited(Coord2D coord) {
+		pixelColor(coord, colorVisited);
+	}
 
-		mergeUpdate(coord, Coord2D(1, 1));
+
+
+	void pixelPath(Coord2D coord) {
+		pixelColor(coord, colorPath);
 	}
 
 
@@ -506,6 +507,29 @@ class SDLGui : Gui {
 
 		SDL_FreeSurface(input);
 		return output;
+	}
+
+
+
+	private void pixelColor(Coord2D coord, Color color) {
+		Color c;
+		void* pixeldata;
+		uint pixel;
+		immutable ubyte bytepp = scratch.format.BytesPerPixel;
+
+		assert(bytepp <= typeof(pixel).sizeof);
+		assert(coord.x < scratch.w);
+		assert(coord.y < scratch.h);
+
+		pixel = SDL_MapRGB(scratch.format, color.r, color.g, color.b);
+
+		SDL_LockSurface(scratch);
+		pixeldata = scratch.pixels;
+		pixeldata += (coord.y * scratch.w + coord.x) * bytepp;
+		*cast(typeof(pixel)*)pixeldata = pixel;
+		SDL_UnlockSurface(scratch);
+
+		mergeUpdate(coord, Coord2D(1, 1));
 	}
 
 
@@ -581,6 +605,9 @@ class SDLGui : Gui {
 
 
 	private static immutable int FPS = 60;
+	private static immutable Color colorPending = Color(127, 127, 255);
+	private static immutable Color colorVisited = Color(230, 230, 230);
+	private static immutable Color colorPath = Color(255, 0, 0);
 	private static immutable SDL_Color textColor = SDL_Color(0, 0, 127);
 	private static immutable Coord2D textPos = Coord2D(0, 0);
 	private static immutable int fontSize = 18;
