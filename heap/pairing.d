@@ -71,29 +71,17 @@ class PairingHeap(T, alias less = "a < b") : Heap!T {
 		root = null;
 
 		while (pending.length > 0) {
+			RealHeap* h;
 			RealHeap* n = pending[$ - 1];
 			pending.length--;
 
-			if (n.subheap != null) {
-				RealHeap* h = n.subheap;
-				do {
-					RealHeap* futureh = h.next;
-					h.next = h;
-					h.prev = h;
-					pending ~= h;
-					h = futureh;
-				} while (h != n.subheap);
+			while ((h = removeSubheap(n)) != null)
+				pending ~= h;
 
-				n.subheap = null;
-			}
-
-			n.parent = null;
 			lookup[n.elem] = n;
-			newroot = merge(newroot, n);
+			root = merge(root, n);
 			size++;
 		}
-
-		root = newroot;
 	}
 
 
@@ -160,26 +148,10 @@ class PairingHeap(T, alias less = "a < b") : Heap!T {
 		if (root.subheap == null)
 			return null;
 
-		ha = root.subheap;
-		do {
-			hb = ha.next;
-
-			ha.prev = ha;
-			ha.next = ha;
-			ha.parent = null;
-
-			if (hb == root.subheap) {
-				tmp ~= ha;
-				break;
-			} else {
-				RealHeap* futureha = hb.next;
-				hb.next = hb;
-				hb.prev = hb;
-				hb.parent = null;
-				tmp ~= merge(ha, hb);
-				ha = futureha;
-			}
-		} while (ha != root.subheap);
+		while ((ha = removeSubheap(root)) != null) {
+			hb = removeSubheap(root);
+			tmp ~= merge(ha, hb);
+		}
 
 		foreach (h; tmp)
 			res = merge(res, h);
@@ -203,6 +175,32 @@ class PairingHeap(T, alias less = "a < b") : Heap!T {
 		}
 
 		child.parent = parent;
+	}
+
+
+
+	private static RealHeap* removeSubheap(RealHeap* parent) {
+		RealHeap* child;
+		if (parent.subheap == null)
+			return null;
+
+		child = parent.subheap;
+		child.parent = null;
+
+		/* Only child. */
+		if (child.next == child) {
+			assert(child.prev == child);
+			parent.subheap = null;
+			return child;
+		}
+
+		child.prev.next = child.next;
+		child.next.prev = child.prev;
+		parent.subheap = child.next;
+
+		child.next = child.prev = child;
+
+		return child;
 	}
 
 
