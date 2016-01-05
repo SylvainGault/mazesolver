@@ -1,5 +1,8 @@
 module heap.pairing;
 
+import std.container.dlist;
+import std.range;
+
 public import heap.heap;
 
 
@@ -29,8 +32,6 @@ class PairingHeap(T, alias less = "a < b") : Heap!T {
 
 	void insert(T e) {
 		RealHeap* n = new RealHeap(e);
-		n.next = n.prev = n;
-		lookup[e] = n;
 		root = merge(root, n);
 		size++;
 		assert(root.parent == null);
@@ -71,14 +72,14 @@ class PairingHeap(T, alias less = "a < b") : Heap!T {
 		root = null;
 
 		while (pending.length > 0) {
-			RealHeap* h;
 			RealHeap* n = pending[$ - 1];
 			pending.length--;
 
-			while ((h = removeSubheap(n)) != null)
+			foreach (h; n.subheap)
 				pending ~= h;
 
-			lookup[n.elem] = n;
+			n.subheap.clear();
+
 			root = merge(root, n);
 			size++;
 		}
@@ -87,27 +88,20 @@ class PairingHeap(T, alias less = "a < b") : Heap!T {
 
 
 	void update(T e) {
-		RealHeap *h = lookup[e];
+		assert(!empty);
 
-		if (h.parent == null)
+		if (root.elem == e)
 			return;
+
+		RealHeap* h;
+		DListHeapPtr p = lookup[e];
+		h = p.front;
 
 		if (comp(h.parent.elem, h.elem)) {
-			if (h.next == h) {
-				h.parent.subheap = null;
-			} else {
-				if (h.parent.subheap == h)
-					h.parent.subheap = h.next;
-
-				h.prev.next = h.next;
-				h.next.prev = h.prev;
-				h.next = h;
-				h.prev = h;
-			}
-
+			lookup.remove(e);
+			h.parent.subheap.remove(p.source);
 			h.parent = null;
 			root = merge(root, h);
-			return;
 		}
 
 		/* TODO: Check for increased key? */
@@ -124,14 +118,18 @@ class PairingHeap(T, alias less = "a < b") : Heap!T {
 			return other;
 
 		/* Only merge one root into one root. */
-		assert(me.next == me && me.prev == me);
-		assert(other.next == other && other.prev == other);
+		assert(other.elem !in lookup, "other in lookup");
+		assert(me.elem !in lookup, "me in lookup");
 
 		if (comp(me.elem, other.elem)) {
-			insertSubheap(other, me);
+			other.subheap.insertFront(me);
+			me.parent = other;
+			lookup[me.elem] = other.subheap[].take(1);
 			return other;
 		} else {
-			insertSubheap(me, other);
+			me.subheap.insertFront(other);
+			other.parent = me;
+			lookup[other.elem] = me.subheap[].take(1);
 			return me;
 		}
 	}
@@ -139,89 +137,49 @@ class PairingHeap(T, alias less = "a < b") : Heap!T {
 
 
 	private RealHeap* mergePairs() {
-		RealHeap* list;
-		RealHeap* ha, hb, res;
+		RealHeap*[] tmp;
+		RealHeap* res;
 
 		if (empty)
 			return null;
 
-		if (root.subheap == null)
+		if (root.subheap.empty())
 			return null;
 
-		while ((ha = removeSubheap(root)) != null) {
-			RealHeap* tmp;
-			hb = removeSubheap(root);
-			tmp = merge(ha, hb);
-			tmp.next = list;
-			list = tmp;
+		DListHeap.Range r = root.subheap[];
+		foreach(ha, hb; zip(StoppingPolicy.longest, r.stride(2), r.drop(1).stride(2))) {
+			lookup.remove(ha.elem);
+			ha.parent = null;
+
+			if (hb != null) {
+				lookup.remove(hb.elem);
+				hb.parent = null;
+			}
+
+			tmp ~= merge(ha, hb);
 		}
 
-		while (list != null) {
-			RealHeap* h = list;
-			list = list.next;
-			h.next = h;
+		root.subheap.clear();
+
+		foreach (h; tmp)
 			res = merge(res, h);
-		}
 
 		return res;
 	}
 
 
 
-	private static void insertSubheap(RealHeap* parent, RealHeap* child) {
-		/* Only unlinked child. */
-		assert(child.next == child && child.prev == child);
-
-		if (parent.subheap != null) {
-			child.next = parent.subheap;
-			child.prev = parent.subheap.prev;
-			parent.subheap.prev.next = child;
-			parent.subheap.prev = child;
-		} else {
-			parent.subheap = child;
-		}
-
-		child.parent = parent;
-	}
-
-
-
-	private static RealHeap* removeSubheap(RealHeap* parent) {
-		RealHeap* child;
-		if (parent.subheap == null)
-			return null;
-
-		child = parent.subheap;
-		child.parent = null;
-
-		/* Only child. */
-		if (child.next == child) {
-			assert(child.prev == child);
-			parent.subheap = null;
-			return child;
-		}
-
-		child.prev.next = child.next;
-		child.next.prev = child.prev;
-		parent.subheap = child.next;
-
-		child.next = child.prev = child;
-
-		return child;
-	}
-
-
-
 	private alias comp = binaryFun!less;
+	private alias DListHeap = DList!(RealHeap*);
+	private alias DListHeapPtr = Take!(DListHeap.Range);
 
 	private struct RealHeap {
 		T elem;
 		RealHeap* parent;
-		RealHeap* next, prev;
-		RealHeap* subheap;
+		DListHeap subheap;
 	}
 
 	size_t size;
 	RealHeap* root;
-	RealHeap*[T] lookup;
+	DListHeapPtr[T] lookup;
 }
