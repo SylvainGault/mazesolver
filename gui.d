@@ -242,11 +242,23 @@ class SDLGui : Gui {
 	void handleOneEvent() {
 		SDL_Event e;
 
+		uint32_t now;
+
+		now = SDL_GetTicks();
+		if (now < lastPoll + 1000 / FPS)
+			return;
+
 		/* Consider text timeout as an event. */
-		if (SDL_PollEvent(&e))
+		if (SDL_PollEvent(&e)) {
+			/*
+			 * Don't reset the timer when an event has been
+			 * received so that queued events won't be throttled.
+			 */
 			handleEvent(e);
-		else
+		} else {
+			lastPoll = now;
 			checkTimeoutText();
+		}
 	}
 
 
@@ -275,10 +287,16 @@ class SDLGui : Gui {
 
 	void handlePendingEvents() {
 		SDL_Event e;
+		uint32_t now;
+
+		now = SDL_GetTicks();
+		if (now < lastPoll + 1000 / FPS)
+			return;
 
 		while (SDL_PollEvent(&e))
 			handleEvent(e);
 
+		lastPoll = now;
 		checkTimeoutText();
 	}
 
@@ -614,7 +632,7 @@ class SDLGui : Gui {
 
 	private bool wantQuit;
 	private Coord2D updateMin, updateMax;
-	private uint32_t lastFrame;
+	private uint32_t lastFrame, lastPoll;
 	private TTF_Font* font;
 	private bool textHasTimeout;
 	private uint textTimeout;
