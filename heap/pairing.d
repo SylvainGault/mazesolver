@@ -139,7 +139,7 @@ class PairingHeap(T, alias less = "a < b") : Heap!T {
 
 
 	private RealHeap* mergePairs() {
-		RealHeap*[] tmp;
+		RealHeap* list;
 		RealHeap* ha, hb, res;
 
 		if (empty)
@@ -149,12 +149,19 @@ class PairingHeap(T, alias less = "a < b") : Heap!T {
 			return null;
 
 		while ((ha = removeSubheap(root)) != null) {
+			RealHeap* tmp;
 			hb = removeSubheap(root);
-			tmp ~= merge(ha, hb);
+			tmp = merge(ha, hb);
+			tmp.next = list;
+			list = tmp;
 		}
 
-		foreach (h; tmp)
+		while (list != null) {
+			RealHeap* h = list;
+			list = list.next;
+			h.next = h;
 			res = merge(res, h);
+		}
 
 		return res;
 	}
