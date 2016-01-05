@@ -456,7 +456,7 @@ class SDLGui : Gui {
 		int err;
 
 		now = SDL_GetTicks();
-		if (!forced && now < lastupdate + 1000 / FPS)
+		if (!forced && now < lastFrame + 1000 / FPS)
 			return;
 
 		if (selective) {
@@ -495,7 +495,7 @@ class SDLGui : Gui {
 
 		updateMin = typeof(updateMin).init;
 		updateMax = typeof(updateMax).init;
-		lastupdate = now;
+		lastFrame = now;
 	}
 
 
@@ -614,7 +614,7 @@ class SDLGui : Gui {
 
 	private bool wantQuit;
 	private Coord2D updateMin, updateMax;
-	private uint32_t lastupdate;
+	private uint32_t lastFrame;
 	private TTF_Font* font;
 	private bool textHasTimeout;
 	private uint textTimeout;
