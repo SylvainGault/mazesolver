@@ -42,7 +42,8 @@ class PairingHeap(T, alias less = "a < b") : Heap!T {
 		assert(!empty, "Cannot call removeFront on an empty heap.");
 		lookup.remove(root.elem);
 		root = mergePairs();
-		root.parent = null;
+		if (root != null)
+			root.parent = null;
 		size--;
 	}
 
@@ -157,7 +158,7 @@ class PairingHeap(T, alias less = "a < b") : Heap!T {
 			return null;
 
 		if (root.subheap == null)
-			return root;
+			return null;
 
 		ha = root.subheap;
 		do {
