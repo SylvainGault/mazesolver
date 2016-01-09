@@ -82,6 +82,7 @@ interface GuiCallbacks {
 	void start();
 	void stop();
 	void quit();
+	void unhandledKey();
 }
 
 
@@ -389,7 +390,7 @@ class SDLGui : Gui {
 			break;
 
 		default:
-			/* TODO: Print help? */
+			callbacks.unhandledKey();
 			break;
 		}
 	}

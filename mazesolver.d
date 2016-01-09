@@ -377,13 +377,19 @@ class MainCoordinator : GuiCallbacks {
 		wantQuit = true;
 	}
 
+	void unhandledKey() {
+		help();
+	}
+
 	private void help() {
 		if (!hasStart)
 			gui.displayMessage("Press S");
 		else if (!hasEnd)
 			gui.displayMessage("Press E");
-		else if (running)
-			gui.displayMessage("Press ESC to stop");
+		else if (!running)
+			gui.displayMessage("Press SPACE or ENTER");
+		else
+			gui.displayMessage("Press Q to quit");
 
 		gui.updateDisplay(true);
 	}
