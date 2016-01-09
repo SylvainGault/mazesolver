@@ -360,15 +360,8 @@ class MainCoordinator : GuiCallbacks {
 	}
 
 	void start() {
-		if (!hasStart) {
-			gui.displayMessage("Press S");
-			gui.updateDisplay(true);
-			return;
-		}
-
-		if (!hasEnd) {
-			gui.displayMessage("Press E");
-			gui.updateDisplay(true);
+		if (!hasStart || !hasEnd || running) {
+			help();
 			return;
 		}
 
@@ -382,6 +375,17 @@ class MainCoordinator : GuiCallbacks {
 	void quit() {
 		solver.stop();
 		wantQuit = true;
+	}
+
+	private void help() {
+		if (!hasStart)
+			gui.displayMessage("Press S");
+		else if (!hasEnd)
+			gui.displayMessage("Press E");
+		else if (running)
+			gui.displayMessage("Press ESC to stop");
+
+		gui.updateDisplay(true);
 	}
 
 
@@ -409,9 +413,11 @@ class MainCoordinator : GuiCallbacks {
 		if (wantQuit)
 			return 0;
 
+		running = true;
 		gui.displayMessage("Searching...");
 		gui.updateDisplay(true);
 		solver.run();
+		running = false;
 		gui.handlePendingEventsWait();
 		gui.finish();
 
@@ -424,6 +430,7 @@ class MainCoordinator : GuiCallbacks {
 	private bool hasEnd;
 	private bool wantStart;
 	private bool wantQuit;
+	private bool running;
 }
 
 
