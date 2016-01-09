@@ -40,6 +40,9 @@ interface Gui {
 	/* Close the window. */
 	void finish();
 
+	/* Disable all the constrols beside quit and stop. */
+	void disable();
+
 	/* Handle one event and return. Just return if there's no event. */
 	void handleOneEvent();
 
@@ -88,7 +91,7 @@ interface GuiCallbacks {
 
 
 import std.stdio;
-import std.algorithm : min, max;
+import std.algorithm : min, max, canFind;
 import std.string : toStringz, fromStringz;
 import std.conv : to;
 import sdl.sdl;
@@ -240,6 +243,12 @@ class SDLGui : Gui {
 
 
 
+	void disable() {
+		disabled = true;
+	}
+
+
+
 	void handleOneEvent() {
 		SDL_Event e;
 
@@ -361,6 +370,13 @@ class SDLGui : Gui {
 
 
 	private void handleEventKeyUp(ref SDL_KeyboardEvent e) {
+		enum alwaysAllowed = [SDLKey.SDLK_q, SDLKey.SDLK_ESCAPE];
+
+		if (disabled && !alwaysAllowed.canFind(e.keysym.sym)) {
+			callbacks.unhandledKey();
+			return;
+		}
+
 		switch (e.keysym.sym) {
 		/* Quit */
 		case SDLKey.SDLK_q:
@@ -632,6 +648,7 @@ class SDLGui : Gui {
 	private static immutable int fontSize = 18;
 
 	private bool wantQuit;
+	private bool disabled;
 	private Coord2D updateMin, updateMax;
 	private uint32_t lastFrame, lastPoll;
 	private TTF_Font* font;
