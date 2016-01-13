@@ -407,9 +407,9 @@ class MainCoordinator : GuiCallbacks {
 	private void help() {
 		if (disabled) {
 			if (running)
-				gui.displayMessage("Press ESC to stop or Q to quit");
+				gui.displayMessage("Press ESC to stop or Q to quit or R to reset");
 			else
-				gui.displayMessage("Press Q to quit");
+				gui.displayMessage("Press Q to quit or R to reset");
 		} else {
 			if (!hasStart)
 				gui.displayMessage("Press S");
@@ -438,22 +438,25 @@ class MainCoordinator : GuiCallbacks {
 		gui.loadImage(filename);
 		gui.start();
 
-		while (!wantStart && !wantQuit) {
+
+		while (!wantQuit) {
 			gui.updateDisplay(true);
 			gui.handleOneEventWait();
+
+			if (wantStart) {
+				wantStart = false;
+				gui.disable();
+				disabled = true;
+
+				gui.displayMessage("Searching...");
+				gui.updateDisplay(true);
+
+				running = true;
+				solver.run();
+				running = false;
+			}
 		}
 
-		if (wantQuit)
-			return 0;
-
-		gui.disable();
-		running = true;
-		disabled = true;
-		gui.displayMessage("Searching...");
-		gui.updateDisplay(true);
-		solver.run();
-		running = false;
-		gui.handlePendingEventsWait();
 		gui.finish();
 
 		return 0;
