@@ -43,6 +43,9 @@ interface Gui {
 	/* Disable all the constrols beside quit and stop. */
 	void disable();
 
+	/* Reset the GUI display and re-enable controls. */
+	void reset();
+
 	/* Handle one event and return. Just return if there's no event. */
 	void handleOneEvent();
 
@@ -262,6 +265,19 @@ class SDLGui : Gui {
 
 	void disable() {
 		state = State.DISABLED;
+	}
+
+
+
+	void reset() {
+		int err;
+
+		err = SDL_BlitSurface(image, null, scratch, null);
+		sdl_enforce(err == 0);
+
+		mergeUpdate(Coord2D(0, 0), Coord2D(screen.w, screen.h));
+
+		state = State.NONE;
 	}
 
 
