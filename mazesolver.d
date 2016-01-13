@@ -81,7 +81,9 @@ class MazeSolver {
 		while (here != maze.start) {
 			here = maze.grid[here.y][here.x].prev;
 			gui.pixelPath(here);
+			gui.updateDisplay();
 		}
+		gui.updateDisplay(true);
 	}
 
 
