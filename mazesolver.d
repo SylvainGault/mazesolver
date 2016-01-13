@@ -276,6 +276,7 @@ class MazeSolver {
 
 		size = gui.imageSize();
 
+		maze.grid.length = 0;
 		maze.grid.length = size.y;
 		foreach (y; 0 .. size.y) {
 			maze.grid[y].length = size.x;
