@@ -379,6 +379,27 @@ class MainCoordinator : GuiCallbacks {
 		wantQuit = true;
 	}
 
+	void reset() {
+		solver.stop();
+		/*
+		 * Do not reset "running", it will reset itself when the solver
+		 * actually stop.
+		 * Do not reset "wantQuit" either as we should quit anyway even
+		 * if by mistake we process a reset event while we already know
+		 * we want to quit.
+		 */
+		wantStart = false;
+		hasStart = false;
+		hasEnd = false;
+		disabled = false;
+		gui.reset();
+
+		if (!running)
+			gui.displayMessage("Reset");
+
+		gui.updateDisplay(true);
+	}
+
 	void unhandledKey() {
 		help();
 	}

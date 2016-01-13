@@ -40,7 +40,7 @@ interface Gui {
 	/* Close the window. */
 	void finish();
 
-	/* Disable all the constrols beside quit and stop. */
+	/* Disable all the constrols beside quit, stop and reset. */
 	void disable();
 
 	/* Reset the GUI display and re-enable controls. */
@@ -88,6 +88,7 @@ interface GuiCallbacks {
 	void start();
 	void stop();
 	void quit();
+	void reset();
 	void unhandledKey();
 }
 
@@ -403,7 +404,11 @@ class SDLGui : Gui {
 
 
 	private void handleEventKeyUp(ref SDL_KeyboardEvent e) {
-		enum alwaysAllowed = [SDLKey.SDLK_q, SDLKey.SDLK_ESCAPE];
+		enum alwaysAllowed = [
+			SDLKey.SDLK_q,
+			SDLKey.SDLK_ESCAPE,
+			SDLKey.SDLK_r
+		];
 
 		if (state == State.DISABLED && !alwaysAllowed.canFind(e.keysym.sym)) {
 			callbacks.unhandledKey();
@@ -420,6 +425,11 @@ class SDLGui : Gui {
 		/* Stop search */
 		case SDLKey.SDLK_ESCAPE:
 			callbacks.stop();
+			break;
+
+		/* Reset solve */
+		case SDLKey.SDLK_r:
+			callbacks.reset();
 			break;
 
 		/* Start and destination coordinate */
