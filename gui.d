@@ -208,8 +208,53 @@ class SDLGui : Gui {
 
 
 	void loadImage(string filename) {
+		SDL_Surface* image888;
+		SDL_PixelFormat format;
+		Color* ptr;
+		ubyte* line;
+
 		image = IMG_Load(filename.toStringz);
 		sdl_enforce(image != null);
+
+		/*
+		 * Convert the pixels data to an array of struct Color once for
+		 * all.
+		 */
+		format.BitsPerPixel = 24;
+		format.BytesPerPixel = 3;
+		format.Rshift = 0;
+		format.Gshift = 8;
+		format.Bshift = 16;
+		format.Rmask = 0x0000ff;
+		format.Gmask = 0x00ff00;
+		format.Bmask = 0xff0000;
+
+		image888 = SDL_ConvertSurface(image, &format, 0);
+		sdl_enforce(image888 != null);
+
+
+		SDL_LockSurface(image888);
+
+		/* Make sure the pointer casting does what I want. */
+		static assert(Color.sizeof == 3);
+		line = cast(typeof(line))image888.pixels;
+
+		imageData.length = image888.h;
+		foreach (y; 0 .. image888.h) {
+			imageData[y].length = image888.w;
+
+			ptr = cast(typeof(ptr))line;
+
+			foreach (x; 0 .. image888.w) {
+				imageData[y][x] = *ptr;
+				ptr++;
+			}
+
+			line += image888.pitch;
+		}
+
+		SDL_UnlockSurface(image888);
+		SDL_FreeSurface(image888);
 	}
 
 
@@ -488,24 +533,10 @@ class SDLGui : Gui {
 
 
 	Color pixelColor(Coord2D coord) {
-		Color c;
-		void* pixeldata;
-		uint pixel;
-		immutable ubyte bytepp = image.format.BytesPerPixel;
-
-		assert(bytepp <= typeof(pixel).sizeof);
 		assert(coord.x < image.w);
 		assert(coord.y < image.h);
 
-		SDL_LockSurface(image);
-		pixeldata = image.pixels;
-		pixeldata += (coord.y * image.w + coord.x) * bytepp;
-		pixel = *cast(typeof(pixel)*)pixeldata;
-		SDL_UnlockSurface(image);
-
-		SDL_GetRGB(pixel, image.format, &c.r, &c.g, &c.b);
-
-		return c;
+		return imageData[coord.y][coord.x];
 	}
 
 
@@ -699,6 +730,7 @@ class SDLGui : Gui {
 
 	/* Input image. */
 	private SDL_Surface* image;
+	private Color[][] imageData;
 
 	/* Input image + progression. */
 	private SDL_Surface* scratch;
