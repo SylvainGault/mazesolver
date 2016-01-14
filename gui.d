@@ -34,6 +34,9 @@ interface Gui {
 	/* Load an image. */
 	void loadImage(string filename);
 
+	/* Retrive a pointer to a the loaded image. */
+	const(Color[][]) getImage();
+
 	/* Display a window with the image. */
 	void start();
 
@@ -265,6 +268,12 @@ class SDLGui : Gui {
 
 		SDL_UnlockSurface(image888);
 		SDL_FreeSurface(image888);
+	}
+
+
+
+	const(Color[][]) getImage() {
+		return imageData;
 	}
 
 
