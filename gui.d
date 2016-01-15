@@ -574,7 +574,6 @@ class SDLGui : Gui {
 
 
 	private void pixelColor(Coord2D coord, Color color) {
-		Color c;
 		void* pixeldata;
 		uint pixel;
 		immutable ubyte bytepp = scratch.format.BytesPerPixel;
