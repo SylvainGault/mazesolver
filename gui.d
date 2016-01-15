@@ -37,6 +37,9 @@ interface Gui {
 	/* Retrive a pointer to a the loaded image. */
 	const(Color[][]) getImage();
 
+	/* Set the binary image to display. */
+	void setBinaryImage(const bool[][] img);
+
 	/* Display a window with the image. */
 	void start();
 
@@ -133,6 +136,10 @@ class SDLGui : Gui {
 		if (image != null)
 			SDL_FreeSurface(image);
 		image = null;
+
+		if (imageBin != null)
+			SDL_FreeSurface(imageBin);
+		imageBin = null;
 
 		if (scratch != null)
 			SDL_FreeSurface(scratch);
@@ -278,6 +285,38 @@ class SDLGui : Gui {
 
 
 
+	void setBinaryImage(const bool[][] img) {
+		ubyte* line, ptr;
+		uint black, white;
+
+		SDL_LockSurface(imageBin);
+		black = SDL_MapRGB(imageBin.format, 0, 0, 0);
+		white = SDL_MapRGB(imageBin.format, 255, 255, 255);
+
+		line = cast(typeof(line))imageBin.pixels;
+
+		assert(img.length == imageBin.h);
+		foreach (y; 0 .. imageBin.h) {
+			assert(img[y].length == imageBin.w);
+
+			ptr = line;
+
+			foreach (x; 0 .. imageBin.w) {
+				if (img[y][x])
+					*cast(typeof(white)*)ptr = white;
+				else
+					*cast(typeof(black)*)ptr = black;
+
+				ptr += imageBin.format.BytesPerPixel;
+			}
+
+			line += imageBin.pitch;
+		}
+
+		SDL_UnlockSurface(imageBin);
+	}
+
+
 	void start() {
 		int err;
 
@@ -299,6 +338,9 @@ class SDLGui : Gui {
 		scratch = SDL_ConvertSurface(image, image.format, image.flags);
 		sdl_enforce(scratch != null);
 
+		imageBin = SDL_ConvertSurface(image, image.format, image.flags);
+		sdl_enforce(imageBin != null);
+
 		err = SDL_BlitSurface(scratch, null, screen, null);
 		sdl_enforce(err == 0);
 
@@ -314,6 +356,9 @@ class SDLGui : Gui {
 
 		SDL_FreeSurface(image);
 		image = null;
+
+		SDL_FreeSurface(imageBin);
+		imageBin = null;
 
 		SDL_FreeSurface(scratch);
 		scratch = null;
@@ -750,6 +795,9 @@ class SDLGui : Gui {
 	/* Input image. */
 	private SDL_Surface* image;
 	private Color[][] imageData;
+
+	/* Binarized image. */
+	private SDL_Surface* imageBin;
 
 	/* Input image + progression. */
 	private SDL_Surface* scratch;
