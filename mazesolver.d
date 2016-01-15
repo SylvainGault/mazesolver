@@ -9,6 +9,7 @@ import std.conv : to;
 import gui;
 import heap.binary;
 import heap.pairing;
+import binarizer;
 
 
 
@@ -335,6 +336,7 @@ class MazeSolver {
 class MainCoordinator : GuiCallbacks {
 	public MazeSolver solver;
 	public Gui gui;
+	public Binarizer binarizer;
 
 
 
@@ -479,17 +481,20 @@ class MainCoordinator : GuiCallbacks {
 int main(string[] args) {
 	SDLGui gui;
 	MazeSolver solver;
+	Binarizer binarizer;
 	MainCoordinator coordinator;
 
 	/* Instanciate the components. */
 	gui = new SDLGui();
 	solver = new MazeSolver();
+	binarizer = new OtsuBinarizer();
 	coordinator = new MainCoordinator();
 
 	/* Connect the components. */
 	solver.gui = gui;
 	coordinator.solver = solver;
 	coordinator.gui = gui;
+	coordinator.binarizer = binarizer;
 	gui.callbacks = coordinator;
 
 	/* Run the main components. */
