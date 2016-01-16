@@ -593,6 +593,16 @@ class SDLGui : Gui {
 
 			break;
 
+		case SDLKey.SDLK_LEFT:
+			if (thresh > 0)
+				thresh--;
+			break;
+
+		case SDLKey.SDLK_RIGHT:
+			if (thresh < 255)
+				thresh++;
+			break;
+
 		default:
 			callbacks.unhandledKey();
 			break;
