@@ -123,6 +123,14 @@ class SDLGui : Gui {
 			SDL_FreeSurface(image);
 		image = null;
 
+		if (scratch != null)
+			SDL_FreeSurface(scratch);
+		scratch = null;
+
+		if (screen != null)
+			SDL_FreeSurface(screen);
+		screen = null;
+
 		if (font != null)
 			TTF_CloseFont(font);
 		font = null;
