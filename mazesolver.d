@@ -447,6 +447,7 @@ class MainCoordinator : GuiCallbacks {
 
 		binarizer.setImage(gui.getImage());
 		solver.setMap(binarizer.getBinaryImage());
+		gui.setBinaryImage(binarizer.getBinaryImage());
 
 
 		while (!wantQuit) {
