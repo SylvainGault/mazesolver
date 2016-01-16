@@ -49,6 +49,20 @@ class MazeSolver {
 
 
 
+	void setMap(const bool[][] map) {
+		maze.grid.length = 0;
+		maze.grid.length = map.length;
+
+		foreach (y; 0 .. map.length) {
+			maze.grid[y].length = map[y].length;
+
+			foreach (x; 0 .. map[y].length)
+				maze.grid[y][x].isWall = !map[y][x];
+		}
+	}
+
+
+
 	void run() {
 		StopWatch timer;
 		Duration dur;
@@ -269,24 +283,13 @@ class MazeSolver {
 
 
 	private void initMaze() {
-		Color cs, ce;
-		Coord2D size;
-
-		cs = gui.pixelColor(maze.start);
-		ce = gui.pixelColor(maze.end);
-
-		assert(cs == ce, "Pixels are not the same color");
-
-		size = gui.imageSize();
-
-		maze.grid.length = 0;
-		maze.grid.length = size.y;
-		foreach (y; 0 .. size.y) {
-			maze.grid[y].length = size.x;
-
-			foreach (x; 0 .. size.x) {
-				Coord2D c = Coord2D(x, y);
-				maze.grid[y][x].isWall = (gui.pixelColor(c) != cs);
+		foreach (y; 0 .. maze.grid.length) {
+			foreach (x; 0 .. maze.grid[y].length) {
+				Coord2D c = Coord2D(cast(uint)x, cast(uint)y);
+				/* Reinit everything except isWall. */
+				bool isWall = maze.grid[y][x].isWall;
+				maze.grid[y][x] = maze.grid[y][x].init;
+				maze.grid[y][x].isWall = isWall;
 				maze.grid[y][x].heuristic = distance(c, maze.end);
 			}
 		}
@@ -441,6 +444,9 @@ class MainCoordinator : GuiCallbacks {
 		gui.windowTitle = "Maze Solver";
 		gui.loadImage(filename);
 		gui.start();
+
+		binarizer.setImage(gui.getImage());
+		solver.setMap(binarizer.getBinaryImage());
 
 
 		while (!wantQuit) {
