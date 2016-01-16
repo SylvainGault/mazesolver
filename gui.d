@@ -341,6 +341,9 @@ class SDLGui : Gui {
 	void start() {
 		int err;
 
+		err = SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+		sdl_enforce(err == 0);
+
 		screen = SDL_SetVideoMode(image.w, image.h, 0,
 		                          SDL_VideoFlags.ANYFORMAT);
 		sdl_enforce(screen != null);
