@@ -314,6 +314,13 @@ class SDLGui : Gui {
 		}
 
 		SDL_UnlockSurface(imageBin);
+
+		/*
+		 * Even if imageBin is already in scratch, setting binInScratch
+		 * to false will force updateDisplay to reload imageBin to
+		 * scratch.
+		 */
+		binInScratch = false;
 	}
 
 
@@ -375,6 +382,7 @@ class SDLGui : Gui {
 
 	void disable() {
 		state = State.DISABLED;
+		showBin = false;
 	}
 
 
@@ -382,8 +390,11 @@ class SDLGui : Gui {
 	void reset() {
 		int err;
 
-		err = SDL_BlitSurface(image, null, scratch, null);
-		sdl_enforce(err == 0);
+		if (!showBin) {
+			err = SDL_BlitSurface(image, null, scratch, null);
+			sdl_enforce(err == 0);
+			binInScratch = false;
+		}
 
 		mergeUpdate(Coord2D(0, 0), Coord2D(screen.w, screen.h));
 
@@ -557,6 +568,10 @@ class SDLGui : Gui {
 			callbacks.start();
 			break;
 
+		case SDLKey.SDLK_b:
+			showBin = !showBin;
+			break;
+
 		default:
 			callbacks.unhandledKey();
 			break;
@@ -631,6 +646,16 @@ class SDLGui : Gui {
 		now = SDL_GetTicks();
 		if (!forced && now < lastFrame + 1000 / FPS)
 			return;
+
+		if (showBin && !binInScratch) {
+			SDL_BlitSurface(imageBin, null, scratch, null);
+			binInScratch = true;
+			selective = false;
+		} else if (!showBin && binInScratch) {
+			SDL_BlitSurface(image, null, scratch, null);
+			binInScratch = false;
+			selective = false;
+		}
 
 		if (selective) {
 			if (updateMax.x == 0 || updateMax.y == 0)
@@ -790,6 +815,7 @@ class SDLGui : Gui {
 	private TTF_Font* font;
 	private bool textHasTimeout;
 	private uint32_t textTimeout;
+	private bool showBin, binInScratch;
 	private State state;
 
 	/* Input image. */
