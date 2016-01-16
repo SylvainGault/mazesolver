@@ -411,6 +411,12 @@ class MainCoordinator : GuiCallbacks {
 		help();
 	}
 
+	void thresholdChange(ubyte value) {
+		binarizer.threshold = value;
+		solver.setMap(binarizer.getBinaryImage());
+		gui.setBinaryImage(binarizer.getBinaryImage());
+	}
+
 	private void help() {
 		if (disabled) {
 			if (running)

@@ -100,6 +100,7 @@ interface GuiCallbacks {
 	void quit();
 	void reset();
 	void unhandledKey();
+	void thresholdChange(ubyte value);
 }
 
 
