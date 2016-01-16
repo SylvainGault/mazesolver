@@ -595,13 +595,17 @@ class SDLGui : Gui {
 			break;
 
 		case SDLKey.SDLK_LEFT:
-			if (thresh > 0)
+			if (thresh > 0) {
 				thresh--;
+				callbacks.thresholdChange(thresh);
+			}
 			break;
 
 		case SDLKey.SDLK_RIGHT:
-			if (thresh < 255)
+			if (thresh < 255) {
 				thresh++;
+				callbacks.thresholdChange(thresh);
+			}
 			break;
 
 		default:
