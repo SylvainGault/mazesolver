@@ -561,7 +561,7 @@ class SDLGui : Gui {
 
 		SDL_LockSurface(scratch);
 		pixeldata = scratch.pixels;
-		pixeldata += (coord.y * scratch.w + coord.x) * bytepp;
+		pixeldata += coord.y * scratch.pitch + coord.x * bytepp;
 		*cast(typeof(pixel)*)pixeldata = pixel;
 		SDL_UnlockSurface(scratch);
 
