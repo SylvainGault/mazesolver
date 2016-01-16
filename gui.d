@@ -40,6 +40,10 @@ interface Gui {
 	/* Set the binary image to display. */
 	void setBinaryImage(const bool[][] img);
 
+	/* Get / set the threshold cursor. */
+	@property ubyte binThreshold() const;
+	@property ubyte binThreshold(ubyte value);
+
 	/* Display a window with the image. */
 	void start();
 
@@ -318,6 +322,20 @@ class SDLGui : Gui {
 		/* We've modified everything. */
 		mergeUpdateSurface(imageBin, Coord2D(0, 0), imageSize());
 	}
+
+
+
+	@property ubyte binThreshold() const {
+		return thresh;
+	}
+
+
+
+	@property ubyte binThreshold(ubyte value) {
+		thresh = value;
+		return value;
+	}
+
 
 
 	void start() {
@@ -824,6 +842,7 @@ class SDLGui : Gui {
 	private bool textHasTimeout;
 	private uint32_t textTimeout;
 	private bool showBin;
+	private ubyte thresh;
 	private State state;
 
 	/* Input image. */
