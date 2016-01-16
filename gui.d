@@ -535,7 +535,7 @@ class SDLGui : Gui {
 
 
 
-	private void handleEventKeyUp(ref SDL_KeyboardEvent e) {
+	private void handleEventKeyDown(ref SDL_KeyboardEvent e) {
 		enum alwaysAllowed = [
 			SDLKey.SDLK_q,
 			SDLKey.SDLK_ESCAPE,
@@ -609,8 +609,8 @@ class SDLGui : Gui {
 			handleEventMouseUp(event.button);
 			break;
 
-		case SDL_EventType.KEYUP:
-			handleEventKeyUp(event.key);
+		case SDL_EventType.KEYDOWN:
+			handleEventKeyDown(event.key);
 			break;
 
 		default:
