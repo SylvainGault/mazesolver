@@ -680,7 +680,7 @@ class SDLGui : Gui {
 	private uint32_t lastFrame, lastPoll;
 	private TTF_Font* font;
 	private bool textHasTimeout;
-	private uint textTimeout;
+	private uint32_t textTimeout;
 	private State state;
 
 	/* Input image. */
