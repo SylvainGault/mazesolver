@@ -415,6 +415,7 @@ class MainCoordinator : GuiCallbacks {
 		binarizer.threshold = value;
 		solver.setMap(binarizer.getBinaryImage());
 		gui.setBinaryImage(binarizer.getBinaryImage());
+		gui.displayMessage("Threshold: " ~ to!string(value));
 	}
 
 	private void help() {
