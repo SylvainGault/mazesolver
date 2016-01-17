@@ -437,7 +437,7 @@ class SDLGui : Gui {
 			handleEvent(e);
 		} else {
 			lastPoll = now;
-			checkTimeoutText();
+			checkTimeout();
 		}
 	}
 
@@ -456,7 +456,7 @@ class SDLGui : Gui {
 
 		/* Text has timeouted. */
 		if (err == -1)
-			checkTimeoutText();
+			checkTimeout();
 	}
 
 
@@ -473,7 +473,7 @@ class SDLGui : Gui {
 			handleEvent(e);
 
 		lastPoll = now;
-		checkTimeoutText();
+		checkTimeout();
 	}
 
 
@@ -490,7 +490,7 @@ class SDLGui : Gui {
 				handleEvent(e);
 
 			if (err == -1)
-				checkTimeoutText();
+				checkTimeout();
 
 			/* Special case because this loop never return. */
 			updateDisplay(true);
@@ -805,7 +805,7 @@ class SDLGui : Gui {
 
 
 
-	private void checkTimeoutText() {
+	private void checkTimeout() {
 		if (textHasTimeout && SDL_GetTicks() > textTimeout)
 			removeMessage();
 	}
