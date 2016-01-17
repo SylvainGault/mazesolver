@@ -447,11 +447,7 @@ class SDLGui : Gui {
 		SDL_Event e;
 		int err;
 
-		if (textHasTimeout)
-			err = waitEventTimeout(&e, textTimeout);
-		else
-			err = SDL_WaitEvent(&e);
-
+		err = waitEventTimeout(&e);
 		sdl_enforce(err != 0);
 
 		/* An event arrived. */
@@ -487,11 +483,7 @@ class SDLGui : Gui {
 		int err;
 
 		while (!wantQuit) {
-			if (textHasTimeout)
-				err = waitEventTimeout(&e, textTimeout);
-			else
-				err = SDL_WaitEvent(&e);
-
+			err = waitEventTimeout(&e);
 			sdl_enforce(err != 0);
 
 			if (err == 1)
@@ -820,16 +812,20 @@ class SDLGui : Gui {
 
 
 
-	private int waitEventTimeout(SDL_Event* e, uint timeout) {
+	private int waitEventTimeout(SDL_Event* e) {
 		int err;
 
-		while (SDL_GetTicks() < timeout) {
+		if (!textHasTimeout)
+			return SDL_WaitEvent(e);
+
+		while (SDL_GetTicks() < textTimeout) {
 			err = SDL_PollEvent(e);
 			if (err == 1)
 				return 1;
 			SDL_Delay(10);
 		}
 
+		/* return -1 in case of timeout */
 		return -1;
 	}
 
