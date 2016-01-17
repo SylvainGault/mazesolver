@@ -578,6 +578,8 @@ class SDLGui : Gui {
 
 		case SDLKey.SDLK_b:
 			showBin = !showBin;
+			binHasTimeout = false;
+			binTimeout = 0;
 
 			if (showBin)
 				showSurface(imageBin);
@@ -802,19 +804,36 @@ class SDLGui : Gui {
 
 
 	private void checkTimeout() {
-		if (textHasTimeout && SDL_GetTicks() > textTimeout)
+		uint32_t now = SDL_GetTicks();
+
+		if (textHasTimeout && now > textTimeout)
 			removeMessage();
+
+		if (binHasTimeout && now > binTimeout) {
+			binHasTimeout = false;
+			binTimeout = 0;
+			showBin = false;
+			showSurface(scratch);
+		}
 	}
 
 
 
 	private int waitEventTimeout(SDL_Event* e) {
 		int err;
+		uint32_t timeout;
 
-		if (!textHasTimeout)
+		if (!textHasTimeout && !binHasTimeout)
 			return SDL_WaitEvent(e);
 
-		while (SDL_GetTicks() < textTimeout) {
+		if (textHasTimeout && !binHasTimeout)
+			timeout = textTimeout;
+		else if (!textTimeout && binHasTimeout)
+			timeout = binTimeout;
+		else
+			timeout = min(textTimeout, binTimeout);
+
+		while (SDL_GetTicks() < timeout) {
 			err = SDL_PollEvent(e);
 			if (err == 1)
 				return 1;
@@ -829,6 +848,12 @@ class SDLGui : Gui {
 
 	private void eventChangeThreshold(ubyte value) {
 		thresh = value;
+		if (!showBin || binHasTimeout) {
+			binTimeout = SDL_GetTicks() + BINTIMEOUT;
+			binHasTimeout = true;
+			showBin = true;
+			showSurface(imageBin);
+		}
 		callbacks.thresholdChange(thresh);
 	}
 
@@ -851,6 +876,7 @@ class SDLGui : Gui {
 	private static immutable SDL_Color textColor = SDL_Color(0, 0, 127);
 	private static immutable Coord2D textPos = Coord2D(0, 0);
 	private static immutable int fontSize = 18;
+	private static immutable BINTIMEOUT = 3000;
 
 	private bool wantQuit;
 	private Coord2D updateMin, updateMax;
@@ -859,6 +885,8 @@ class SDLGui : Gui {
 	private bool textHasTimeout;
 	private uint32_t textTimeout;
 	private bool showBin;
+	private bool binHasTimeout;
+	private uint32_t binTimeout;
 	private ubyte thresh;
 	private State state;
 
