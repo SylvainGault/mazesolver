@@ -587,17 +587,13 @@ class SDLGui : Gui {
 			break;
 
 		case SDLKey.SDLK_LEFT:
-			if (thresh > 0) {
-				thresh--;
-				callbacks.thresholdChange(thresh);
-			}
+			if (thresh > 0)
+				eventChangeThreshold(cast(ubyte)(thresh - 1));
 			break;
 
 		case SDLKey.SDLK_RIGHT:
-			if (thresh < 255) {
-				thresh++;
-				callbacks.thresholdChange(thresh);
-			}
+			if (thresh < 255)
+				eventChangeThreshold(cast(ubyte)(thresh + 1));
 			break;
 
 		default:
@@ -827,6 +823,13 @@ class SDLGui : Gui {
 
 		/* return -1 in case of timeout */
 		return -1;
+	}
+
+
+
+	private void eventChangeThreshold(ubyte value) {
+		thresh = value;
+		callbacks.thresholdChange(thresh);
 	}
 
 
