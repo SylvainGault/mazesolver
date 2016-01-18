@@ -116,7 +116,7 @@ enum SDL_EventMask {
 struct SDL_ActiveEvent {
 	SDL_EventType type;	/**< SDL_ACTIVEEVENT */
 	uint8_t gain;		/**< Whether given states were gained or lost (1/0) */
-	uint8_t state;		/**< A mask of the focus states */
+	SDL_AppState state;	/**< A mask of the focus states */
 };
 
 /** Keyboard event structure */
