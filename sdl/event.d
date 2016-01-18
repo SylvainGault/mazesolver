@@ -3,6 +3,7 @@ module sdl.event;
 
 import core.stdc.stdint;
 
+public import sdl.active;
 public import sdl.keyboard;
 
 extern (C) {
