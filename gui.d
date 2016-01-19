@@ -208,10 +208,22 @@ class SDLGui : Gui {
 
 
 	void loadImage(string filename) {
+		import core.bitop : bsf;
+
+		static uint32_t colorToUint(Color c) {
+			static assert(uint32_t.sizeof >= Color.sizeof);
+			uint32_t res;
+			*cast(Color*)&res = c;
+			return res;
+		}
+
 		SDL_Surface* image888;
 		SDL_PixelFormat format;
 		Color* ptr;
 		ubyte* line;
+		immutable uint32_t rmask = colorToUint(Color(255, 0, 0));
+		immutable uint32_t gmask = colorToUint(Color(0, 255, 0));
+		immutable uint32_t bmask = colorToUint(Color(0, 0, 255));
 
 		image = IMG_Load(filename.toStringz);
 		sdl_enforce(image != null);
@@ -220,14 +232,14 @@ class SDLGui : Gui {
 		 * Convert the pixels data to an array of struct Color once for
 		 * all.
 		 */
-		format.BitsPerPixel = 24;
-		format.BytesPerPixel = 3;
-		format.Rshift = 0;
-		format.Gshift = 8;
-		format.Bshift = 16;
-		format.Rmask = 0x0000ff;
-		format.Gmask = 0x00ff00;
-		format.Bmask = 0xff0000;
+		format.BytesPerPixel = Color.sizeof;
+		format.BitsPerPixel = Color.sizeof * 8;
+		format.Rmask = rmask;
+		format.Gmask = gmask;
+		format.Bmask = bmask;
+		format.Rshift = cast(typeof(format.Rshift))bsf(format.Rmask);
+		format.Gshift = cast(typeof(format.Gshift))bsf(format.Gmask);
+		format.Bshift = cast(typeof(format.Bshift))bsf(format.Bmask);
 
 		image888 = SDL_ConvertSurface(image, &format, 0);
 		sdl_enforce(image888 != null);
@@ -235,8 +247,6 @@ class SDLGui : Gui {
 
 		SDL_LockSurface(image888);
 
-		/* Make sure the pointer casting does what I want. */
-		static assert(Color.sizeof == 3);
 		line = cast(typeof(line))image888.pixels;
 
 		imageData.length = image888.h;
