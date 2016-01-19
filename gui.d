@@ -315,12 +315,8 @@ class SDLGui : Gui {
 
 		SDL_UnlockSurface(imageBin);
 
-		/*
-		 * Even if imageBin is already in scratch, setting binInScratch
-		 * to false will force updateDisplay to reload imageBin to
-		 * scratch.
-		 */
-		binInScratch = false;
+		/* We've modified everything. */
+		mergeUpdateSurface(imageBin, Coord2D(0, 0), imageSize());
 	}
 
 
@@ -348,8 +344,8 @@ class SDLGui : Gui {
 		imageBin = SDL_ConvertSurface(image, image.format, image.flags);
 		sdl_enforce(imageBin != null);
 
-		err = SDL_BlitSurface(scratch, null, screen, null);
-		sdl_enforce(err == 0);
+		/* Show scratch by default */
+		showSurface(scratch);
 
 		updateDisplay(true, false);
 	}
@@ -383,6 +379,7 @@ class SDLGui : Gui {
 	void disable() {
 		state = State.DISABLED;
 		showBin = false;
+		showSurface(scratch);
 	}
 
 
@@ -390,13 +387,10 @@ class SDLGui : Gui {
 	void reset() {
 		int err;
 
-		if (!showBin) {
-			err = SDL_BlitSurface(image, null, scratch, null);
-			sdl_enforce(err == 0);
-			binInScratch = false;
-		}
+		err = SDL_BlitSurface(image, null, scratch, null);
+		sdl_enforce(err == 0);
 
-		mergeUpdate(Coord2D(0, 0), Coord2D(screen.w, screen.h));
+		mergeUpdateSurface(scratch, Coord2D(0, 0), imageSize());
 
 		state = State.NONE;
 	}
@@ -570,6 +564,12 @@ class SDLGui : Gui {
 
 		case SDLKey.SDLK_b:
 			showBin = !showBin;
+
+			if (showBin)
+				showSurface(imageBin);
+			else
+				showSurface(scratch);
+
 			break;
 
 		default:
@@ -647,16 +647,6 @@ class SDLGui : Gui {
 		if (!forced && now < lastFrame + 1000 / FPS)
 			return;
 
-		if (showBin && !binInScratch) {
-			SDL_BlitSurface(imageBin, null, scratch, null);
-			binInScratch = true;
-			selective = false;
-		} else if (!showBin && binInScratch) {
-			SDL_BlitSurface(image, null, scratch, null);
-			binInScratch = false;
-			selective = false;
-		}
-
 		if (selective) {
 			if (updateMax.x == 0 || updateMax.y == 0)
 				return;
@@ -673,7 +663,7 @@ class SDLGui : Gui {
 		}
 
 
-		err = SDL_BlitSurface(scratch, &rect, screen, &rect);
+		err = SDL_BlitSurface(surfInScreen, &rect, screen, &rect);
 		sdl_enforce(err == 0);
 
 		if (textSurf != null) {
@@ -694,6 +684,16 @@ class SDLGui : Gui {
 		updateMin = typeof(updateMin).init;
 		updateMax = typeof(updateMax).init;
 		lastFrame = now;
+	}
+
+
+
+	private void showSurface(SDL_Surface* surf) {
+		if (surf == surfInScreen)
+			return;
+
+		surfInScreen = surf;
+		mergeUpdate(Coord2D(0, 0), imageSize());
 	}
 
 
@@ -726,7 +726,7 @@ class SDLGui : Gui {
 		*cast(typeof(pixel)*)pixeldata = pixel;
 		SDL_UnlockSurface(scratch);
 
-		mergeUpdate(coord, Coord2D(1, 1));
+		mergeUpdateSurface(scratch, coord, Coord2D(1, 1));
 	}
 
 
@@ -765,6 +765,14 @@ class SDLGui : Gui {
 		updateMin.y = min(updateMin.y, coord.y);
 		updateMax.x = max(updateMax.x, coord.x + size.x);
 		updateMax.y = max(updateMax.y, coord.y + size.y);
+	}
+
+
+
+	private void mergeUpdateSurface(SDL_Surface* s, Coord2D c, Coord2D sz) {
+		if (s != surfInScreen)
+			return;
+		mergeUpdate(c, sz);
 	}
 
 
@@ -815,7 +823,7 @@ class SDLGui : Gui {
 	private TTF_Font* font;
 	private bool textHasTimeout;
 	private uint32_t textTimeout;
-	private bool showBin, binInScratch;
+	private bool showBin;
 	private State state;
 
 	/* Input image. */
@@ -830,6 +838,9 @@ class SDLGui : Gui {
 
 	/* Surface for the text to be displayed. */
 	private SDL_Surface* textSurf;
+
+	/* Pointer to the surface blitted in screen. */
+	private SDL_Surface* surfInScreen;
 
 	/* Merge all the surfaces to be displayed. */
 	private SDL_Surface* screen;
