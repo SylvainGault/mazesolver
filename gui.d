@@ -644,19 +644,19 @@ class SDLGui : Gui {
 
 
 	void pixelPending(Coord2D coord) {
-		pixelColor(coord, colorPending);
+		pixelColor(scratch, coord, colorPending);
 	}
 
 
 
 	void pixelVisited(Coord2D coord) {
-		pixelColor(coord, colorVisited);
+		pixelColor(scratch, coord, colorVisited);
 	}
 
 
 
 	void pixelPath(Coord2D coord) {
-		pixelColor(coord, colorPath);
+		pixelColor(scratch, coord, colorPath);
 	}
 
 
@@ -732,24 +732,24 @@ class SDLGui : Gui {
 
 
 
-	private void pixelColor(Coord2D coord, Color color) {
+	private void pixelColor(SDL_Surface* surf, Coord2D coord, Color color) {
 		void* pixeldata;
 		uint pixel;
-		immutable ubyte bytepp = scratch.format.BytesPerPixel;
+		immutable ubyte bytepp = surf.format.BytesPerPixel;
 
 		assert(bytepp <= typeof(pixel).sizeof);
-		assert(coord.x < scratch.w);
-		assert(coord.y < scratch.h);
+		assert(coord.x < surf.w);
+		assert(coord.y < surf.h);
 
-		pixel = SDL_MapRGB(scratch.format, color.r, color.g, color.b);
+		pixel = SDL_MapRGB(surf.format, color.r, color.g, color.b);
 
-		SDL_LockSurface(scratch);
-		pixeldata = scratch.pixels;
-		pixeldata += coord.y * scratch.pitch + coord.x * bytepp;
+		SDL_LockSurface(surf);
+		pixeldata = surf.pixels;
+		pixeldata += coord.y * surf.pitch + coord.x * bytepp;
 		*cast(typeof(pixel)*)pixeldata = pixel;
-		SDL_UnlockSurface(scratch);
+		SDL_UnlockSurface(surf);
 
-		mergeUpdateSurface(scratch, coord, Coord2D(1, 1));
+		mergeUpdateSurface(surf, coord, Coord2D(1, 1));
 	}
 
 
