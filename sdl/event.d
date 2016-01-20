@@ -246,7 +246,7 @@ union SDL_Event {
  */
 void SDL_PumpEvents();
 
-enum SDL_eventaction {
+enum SDL_EventAction {
 	SDL_ADDEVENT,
 	SDL_PEEKEVENT,
 	SDL_GETEVENT
@@ -271,7 +271,7 @@ enum SDL_eventaction {
  *  This function is thread-safe.
  */
 int SDL_PeepEvents(SDL_Event *events, int numevents,
-				SDL_eventaction action, uint32_t mask);
+				SDL_EventAction action, uint32_t mask);
 
 /** Polls for currently pending events, and returns 1 if there are any pending
  *  events, or 0 if there are none available.  If 'event' is not NULL, the next
