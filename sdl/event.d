@@ -247,9 +247,9 @@ union SDL_Event {
 void SDL_PumpEvents();
 
 enum SDL_EventAction {
-	SDL_ADDEVENT,
-	SDL_PEEKEVENT,
-	SDL_GETEVENT
+	ADDEVENT,
+	PEEKEVENT,
+	GETEVENT
 };
 
 /**
