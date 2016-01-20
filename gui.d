@@ -426,7 +426,7 @@ class SDLGui : Gui {
 			return;
 
 		/* Consider text timeout as an event. */
-		if (SDL_PollEvent(&e)) {
+		if (pollEvent(&e)) {
 			/*
 			 * Don't reset the timer when an event has been
 			 * received so that queued events won't be throttled.
@@ -466,7 +466,7 @@ class SDLGui : Gui {
 		if (now < lastPoll + 1000 / FPS)
 			return;
 
-		while (SDL_PollEvent(&e))
+		while (pollEvent(&e))
 			handleEvent(e);
 
 		lastPoll = now;
@@ -816,9 +816,35 @@ class SDLGui : Gui {
 
 
 
+	private int pollEvent(SDL_Event* e) {
+		if (!hasBufferedEvent)
+			return SDL_PollEvent(e);
+
+		hasBufferedEvent = false;
+		*e = bufferedEvent;
+		return 1;
+	}
+
+
+
+	private void unpollEvent(SDL_Event* e) {
+		assert(!hasBufferedEvent);
+
+		bufferedEvent = *e;
+		hasBufferedEvent = true;
+	}
+
+
+
 	private int waitEventTimeout(SDL_Event* e) {
 		int err;
 		uint32_t timeout;
+
+		/* Check for a buffered event before even trying to sleep. */
+		if (hasBufferedEvent) {
+			pollEvent(e);
+			return 1;
+		}
 
 		if (!textHasTimeout && !binHasTimeout)
 			return SDL_WaitEvent(e);
@@ -831,7 +857,7 @@ class SDLGui : Gui {
 			timeout = min(textTimeout, binTimeout);
 
 		while (SDL_GetTicks() < timeout) {
-			err = SDL_PollEvent(e);
+			err = pollEvent(e);
 			if (err == 1)
 				return 1;
 			SDL_Delay(10);
@@ -886,6 +912,9 @@ class SDLGui : Gui {
 	private uint32_t binTimeout;
 	private ubyte thresh;
 	private State state;
+
+	private bool hasBufferedEvent;
+	private SDL_Event bufferedEvent;
 
 	/* Input image. */
 	private SDL_Surface* image;
