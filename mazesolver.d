@@ -51,7 +51,7 @@ class MazeSolver {
 
 
 	void setMap(const bool[][] map) {
-		binMap = rebindable(map);
+		wallsMap = rebindable(map);
 	}
 
 
@@ -276,18 +276,18 @@ class MazeSolver {
 
 
 	private void initMaze() {
-		maze.grid.length = binMap.length;
+		maze.grid.length = wallsMap.length;
 
 		foreach (y; 0 .. maze.grid.length) {
-			assert(binMap[y].length == binMap[0].length);
-			maze.grid[y].length = binMap[y].length;
+			assert(wallsMap[y].length == wallsMap[0].length);
+			maze.grid[y].length = wallsMap[y].length;
 
 			foreach (x; 0 .. maze.grid[y].length) {
 				Coord2D c = Coord2D(cast(uint)x, cast(uint)y);
 				/* Reinit everything except isWall. */
 				bool isWall = maze.grid[y][x].isWall;
 				maze.grid[y][x] = maze.grid[y][x].init;
-				maze.grid[y][x].isWall = !binMap[y][x];
+				maze.grid[y][x].isWall = wallsMap[y][x];
 				maze.grid[y][x].heuristic = distance(c, maze.end);
 			}
 		}
@@ -329,7 +329,7 @@ class MazeSolver {
 
 
 	private Maze maze;
-	private Rebindable!(const bool[][]) binMap;
+	private Rebindable!(const bool[][]) wallsMap;
 	private bool wantStop;
 }
 
@@ -411,9 +411,18 @@ class MainCoordinator : GuiCallbacks {
 	}
 
 	void thresholdChange(ubyte value) {
+		Rebindable!(const bool[][]) imageBin;
+
 		binarizer.threshold = value;
-		solver.setMap(binarizer.getBinaryImage());
-		gui.setBinaryImage(binarizer.getBinaryImage());
+		imageBin = rebindable(binarizer.getBinaryImage());
+		gui.setBinaryImage(imageBin);
+
+		foreach (y; 0 .. imageBin.length) {
+			foreach (x; 0 .. imageBin[y].length)
+				walls[y][x] = !imageBin[y][x];
+		}
+
+		solver.setMap(walls);
 		gui.displayMessage("Threshold: " ~ to!string(value));
 	}
 
@@ -439,6 +448,7 @@ class MainCoordinator : GuiCallbacks {
 	/* Only public method of MainCoordinator */
 	int run(string[] args) {
 		string filename;
+		Rebindable!(const bool[][]) imageBin;
 
 		if (args.length < 2) {
 			stderr.writefln("usage: %s image", args[0]);
@@ -452,7 +462,16 @@ class MainCoordinator : GuiCallbacks {
 		gui.start();
 
 		binarizer.setImage(gui.getImage());
-		solver.setMap(binarizer.getBinaryImage());
+		imageBin = rebindable(binarizer.getBinaryImage());
+
+		walls.length = imageBin.length;
+		foreach (y; 0 .. imageBin.length) {
+			walls[y].length = imageBin[y].length;
+			foreach (x; 0 .. imageBin[y].length)
+				walls[y][x] = !imageBin[y][x];
+		}
+
+		solver.setMap(walls);
 		gui.binThreshold = binarizer.threshold;
 		gui.setBinaryImage(binarizer.getBinaryImage());
 
@@ -488,6 +507,8 @@ class MainCoordinator : GuiCallbacks {
 	private bool wantQuit;
 	private bool running;
 	private bool disabled;
+
+	private bool[][] walls;
 }
 
 
