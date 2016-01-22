@@ -3,6 +3,7 @@ import std.math;
 import std.datetime;
 import core.time;
 import std.algorithm;
+import std.typecons;
 import std.traits;
 import std.conv : to;
 
@@ -50,15 +51,7 @@ class MazeSolver {
 
 
 	void setMap(const bool[][] map) {
-		maze.grid.length = 0;
-		maze.grid.length = map.length;
-
-		foreach (y; 0 .. map.length) {
-			maze.grid[y].length = map[y].length;
-
-			foreach (x; 0 .. map[y].length)
-				maze.grid[y][x].isWall = !map[y][x];
-		}
+		binMap = rebindable(map);
 	}
 
 
@@ -283,13 +276,18 @@ class MazeSolver {
 
 
 	private void initMaze() {
+		maze.grid.length = binMap.length;
+
 		foreach (y; 0 .. maze.grid.length) {
+			assert(binMap[y].length == binMap[0].length);
+			maze.grid[y].length = binMap[y].length;
+
 			foreach (x; 0 .. maze.grid[y].length) {
 				Coord2D c = Coord2D(cast(uint)x, cast(uint)y);
 				/* Reinit everything except isWall. */
 				bool isWall = maze.grid[y][x].isWall;
 				maze.grid[y][x] = maze.grid[y][x].init;
-				maze.grid[y][x].isWall = isWall;
+				maze.grid[y][x].isWall = !binMap[y][x];
 				maze.grid[y][x].heuristic = distance(c, maze.end);
 			}
 		}
@@ -331,6 +329,7 @@ class MazeSolver {
 
 
 	private Maze maze;
+	private Rebindable!(const bool[][]) binMap;
 	private bool wantStop;
 }
 
