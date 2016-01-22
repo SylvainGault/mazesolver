@@ -4,6 +4,7 @@ import std.datetime;
 import core.time;
 import std.algorithm;
 import std.traits;
+import std.conv : to;
 
 import gui;
 import heap.binary;
