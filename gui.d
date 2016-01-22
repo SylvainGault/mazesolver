@@ -339,6 +339,7 @@ class SDLGui : Gui {
 
 
 	void start() {
+		uint32_t white;
 		int err;
 
 		err = SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
@@ -364,6 +365,11 @@ class SDLGui : Gui {
 
 		imageBin = SDL_ConvertSurface(image, image.format, image.flags);
 		sdl_enforce(imageBin != null);
+
+		/* Fill the binary image with white by default. */
+		white = SDL_MapRGB(imageBin.format, 255, 255, 255);
+		err = SDL_FillRect(imageBin, null, white);
+		sdl_enforce(err == 0);
 
 		/* Show scratch by default */
 		showSurface(scratch);
