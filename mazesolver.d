@@ -419,11 +419,16 @@ class MainCoordinator : GuiCallbacks {
 
 		foreach (y; 0 .. imageBin.length) {
 			foreach (x; 0 .. imageBin[y].length)
-				walls[y][x] = !imageBin[y][x];
+				walls[y][x] = !imageBin[y][x] | handWalls[y][x];
 		}
 
 		solver.setMap(walls);
 		gui.displayMessage("Threshold: " ~ to!string(value));
+	}
+
+	void addWall(Coord2D start, Coord2D end) {
+		lineWall(start, end);
+		solver.setMap(walls);
 	}
 
 	private void help() {
@@ -442,6 +447,50 @@ class MainCoordinator : GuiCallbacks {
 		}
 		gui.updateDisplay(true);
 	}
+
+	private void lineWall(Coord2D start, Coord2D end) {
+		static Coord2D addCoord2D(Coord2D a, Coord2D b) {
+			return Coord2D(a.x + b.x, a.y + b.y);
+		}
+		int e, eadd, esub;
+		int dx = end.x - start.x;
+		int dy = end.y - start.y;
+		Coord2D c, step, slide;
+
+		if (abs(dy) <= abs(dx)) {
+			step.x = (dx < 0) ? -1 : 1;
+			slide.y = (dy < 0) ? -1 : 1;
+			eadd = 2 * abs(dy);
+			esub = 2 * abs(dx);
+		} else {
+			step.y = (dy < 0) ? -1 : 1;
+			slide.x = (dx < 0) ? -1 : 1;
+			eadd = 2 * abs(dx);
+			esub = 2 * abs(dy);
+		}
+
+		e = -esub / 2;
+
+		for (c = start; c != end; c = addCoord2D(c, step)) {
+			pixelWall(c);
+			e += eadd;
+			if (e > 0) {
+				c = addCoord2D(c, slide);
+				e -= esub;
+			}
+		}
+
+		pixelWall(c);
+	}
+
+	private void pixelWall(Coord2D c) {
+		walls[c.y][c.x] = true;
+		handWalls[c.y][c.x] = true;
+		gui.pixelWall(c);
+	}
+
+
+
 
 
 
@@ -464,8 +513,10 @@ class MainCoordinator : GuiCallbacks {
 		binarizer.setImage(gui.getImage());
 		imageBin = rebindable(binarizer.getBinaryImage());
 
+		handWalls.length = imageBin.length;
 		walls.length = imageBin.length;
 		foreach (y; 0 .. imageBin.length) {
+			handWalls[y].length = imageBin[y].length;
 			walls[y].length = imageBin[y].length;
 			foreach (x; 0 .. imageBin[y].length)
 				walls[y][x] = !imageBin[y][x];
@@ -508,6 +559,7 @@ class MainCoordinator : GuiCallbacks {
 	private bool running;
 	private bool disabled;
 
+	private bool[][] handWalls;
 	private bool[][] walls;
 }
 

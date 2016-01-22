@@ -104,6 +104,7 @@ interface GuiCallbacks {
 	void reset();
 	void unhandledKey();
 	void thresholdChange(ubyte value);
+	void addWall(Coord2D start, Coord2D end);
 }
 
 
