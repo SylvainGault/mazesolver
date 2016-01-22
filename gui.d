@@ -86,6 +86,9 @@ interface Gui {
 	/* Set the color of a pixel to mark it as part of the shortest path. */
 	void pixelPath(Coord2D coord);
 
+	/* Set a pixel to be a wall in the initial image. */
+	void pixelWall(Coord2D coord);
+
 	/* Update the displayed. */
 	void updateDisplay(bool forced = false, bool selective = true);
 }
@@ -145,6 +148,10 @@ class SDLGui : Gui {
 		if (imageBin != null)
 			SDL_FreeSurface(imageBin);
 		imageBin = null;
+
+		if (imageWalls != null)
+			SDL_FreeSurface(imageWalls);
+		imageWalls = null;
 
 		if (scratch != null)
 			SDL_FreeSurface(scratch);
@@ -292,6 +299,7 @@ class SDLGui : Gui {
 	void setBinaryImage(const bool[][] img) {
 		ubyte* line, ptr;
 		uint black, white;
+		int err;
 
 		SDL_LockSurface(imageBin);
 		black = SDL_MapRGB(imageBin.format, 0, 0, 0);
@@ -318,6 +326,9 @@ class SDLGui : Gui {
 		}
 
 		SDL_UnlockSurface(imageBin);
+
+		err = SDL_BlitSurface(imageWalls, null, imageBin, null);
+		sdl_enforce(err == 0);
 
 		/* We've modified everything. */
 		mergeUpdateSurface(imageBin, Coord2D(0, 0), imageSize());
@@ -371,6 +382,13 @@ class SDLGui : Gui {
 		err = SDL_FillRect(imageBin, null, white);
 		sdl_enforce(err == 0);
 
+		imageWalls = SDL_ConvertSurface(imageBin, imageBin.format, imageBin.flags);
+		sdl_enforce(imageWalls != null);
+
+		/* White is transparent. */
+		err = SDL_SetColorKey(imageWalls, SDL_InternalFlags.SRCCOLORKEY, white);
+		sdl_enforce(err == 0);
+
 		/* Show scratch by default */
 		showSurface(scratch);
 	}
@@ -387,6 +405,9 @@ class SDLGui : Gui {
 
 		SDL_FreeSurface(imageBin);
 		imageBin = null;
+
+		SDL_FreeSurface(imageWalls);
+		imageWalls = null;
 
 		SDL_FreeSurface(scratch);
 		scratch = null;
@@ -413,6 +434,9 @@ class SDLGui : Gui {
 		int err;
 
 		err = SDL_BlitSurface(image, null, scratch, null);
+		sdl_enforce(err == 0);
+
+		err = SDL_BlitSurface(imageWalls, null, scratch, null);
 		sdl_enforce(err == 0);
 
 		mergeUpdateSurface(scratch, Coord2D(0, 0), imageSize());
@@ -667,6 +691,19 @@ class SDLGui : Gui {
 
 
 
+	void pixelWall(Coord2D coord) {
+		pixelColor(imageWalls, coord, colorWall);
+
+		/* No need to blit for a single pixel. */
+		pixelColor(scratch, coord, colorWall);
+		pixelColor(imageBin, coord, colorWall);
+
+		mergeUpdateSurface(scratch, coord, Coord2D(1, 1));
+		mergeUpdateSurface(imageBin, coord, Coord2D(1, 1));
+	}
+
+
+
 	void updateDisplay(bool forced = false, bool selective = true) {
 		SDL_Rect rect;
 		uint32_t now;
@@ -902,6 +939,7 @@ class SDLGui : Gui {
 	private static immutable Color colorPending = Color(127, 127, 255);
 	private static immutable Color colorVisited = Color(230, 230, 230);
 	private static immutable Color colorPath = Color(255, 0, 0);
+	private static immutable Color colorWall = Color(0, 0, 0);
 	private static immutable SDL_Color textColor = SDL_Color(0, 0, 127);
 	private static immutable Coord2D textPos = Coord2D(0, 0);
 	private static immutable int fontSize = 18;
@@ -926,10 +964,13 @@ class SDLGui : Gui {
 	private SDL_Surface* image;
 	private Color[][] imageData;
 
-	/* Binarized image. */
+	/* Hand-drawn walls. */
+	private SDL_Surface* imageWalls;
+
+	/* Binarized image + hand-drawn walls. */
 	private SDL_Surface* imageBin;
 
-	/* Input image + progression. */
+	/* Input image + hand-drawn walls + progression. */
 	private SDL_Surface* scratch;
 
 	/* Surface for the text to be displayed. */
