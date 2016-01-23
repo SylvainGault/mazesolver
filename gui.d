@@ -101,7 +101,7 @@ interface GuiCallbacks {
 	void start();
 	void stop();
 	void quit();
-	void reset();
+	void reset(bool hard);
 	void unhandledKey();
 	void thresholdChange(ubyte value);
 	void addWall(Coord2D start, Coord2D end);
@@ -682,7 +682,8 @@ class SDLGui : Gui {
 
 		/* Reset solve */
 		case SDLKey.SDLK_r:
-			callbacks.reset();
+			bool hard = cast(bool)(e.keysym.mod & SDLMod.KMOD_SHIFT);
+			callbacks.reset(hard);
 			break;
 
 		/* Start and destination coordinate */

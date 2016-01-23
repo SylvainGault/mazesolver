@@ -385,7 +385,9 @@ class MainCoordinator : GuiCallbacks {
 		wantQuit = true;
 	}
 
-	void reset() {
+	void reset(bool hard) {
+		Rebindable!(const bool[][]) imageBin;
+
 		solver.stop();
 		/*
 		 * Do not reset "running", it will reset itself when the solver
@@ -398,7 +400,19 @@ class MainCoordinator : GuiCallbacks {
 		hasStart = false;
 		hasEnd = false;
 		disabled = false;
-		gui.reset();
+		gui.reset(hard);
+
+		if (hard) {
+			imageBin = rebindable(binarizer.getBinaryImage());
+
+			foreach (y; 0 .. handWalls.length) {
+				foreach (x; 0 .. handWalls[y].length) {
+					handWalls[y][x] = false;
+					walls[y][x] = !imageBin[y][x];
+				}
+			}
+			solver.setMap(walls);
+		}
 
 		if (!running)
 			gui.displayMessage("Reset");
