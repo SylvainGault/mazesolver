@@ -262,6 +262,10 @@ class SDLGui : Gui {
 
 		SDL_FreeSurface(screen);
 		screen = null;
+
+		TTF_CloseFont(font);
+		font = null;
+
 	}
 
 
