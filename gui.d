@@ -591,7 +591,23 @@ class SDLGui : Gui {
 
 
 	private void handleEventMouseMotion(ref SDL_MouseMotionEvent e) {
-		Coord2D coord = Coord2D(e.x, e.y);
+		SDL_Event f;
+		Coord2D coord;
+
+		while (pollEvent(&f)) {
+			SDL_MouseMotionEvent* m = &f.motion;
+			if (f.type != e.type || m.which != e.which || m.state != e.state) {
+				unpollEvent(&f);
+				break;
+			}
+
+			e.x = m.x;
+			e.y = m.y;
+			e.xrel += m.xrel;
+			e.yrel += m.yrel;
+		}
+
+		coord = Coord2D(e.x, e.y);
 
 		switch (state) {
 		case State.ADD_WALL:
