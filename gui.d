@@ -150,6 +150,10 @@ class SDLGui : Gui {
 			SDL_FreeSurface(imageBin);
 		imageBin = null;
 
+		if (binWalls != null)
+			SDL_FreeSurface(binWalls);
+		binWalls = null;
+
 		if (imageWalls != null)
 			SDL_FreeSurface(imageWalls);
 		imageWalls = null;
@@ -328,11 +332,14 @@ class SDLGui : Gui {
 
 		SDL_UnlockSurface(imageBin);
 
-		err = SDL_BlitSurface(imageWalls, null, imageBin, null);
+		err = SDL_BlitSurface(imageBin, null, binWalls, null);
+		sdl_enforce(err == 0);
+
+		err = SDL_BlitSurface(imageWalls, null, binWalls, null);
 		sdl_enforce(err == 0);
 
 		/* We've modified everything. */
-		mergeUpdateSurface(imageBin, Coord2D(0, 0), imageSize());
+		mergeUpdateSurface(binWalls, Coord2D(0, 0), imageSize());
 	}
 
 
@@ -383,6 +390,9 @@ class SDLGui : Gui {
 		err = SDL_FillRect(imageBin, null, white);
 		sdl_enforce(err == 0);
 
+		binWalls = SDL_ConvertSurface(imageBin, imageBin.format, imageBin.flags);
+		sdl_enforce(binWalls != null);
+
 		imageWalls = SDL_ConvertSurface(imageBin, imageBin.format, imageBin.flags);
 		sdl_enforce(imageWalls != null);
 
@@ -406,6 +416,9 @@ class SDLGui : Gui {
 
 		SDL_FreeSurface(imageBin);
 		imageBin = null;
+
+		SDL_FreeSurface(binWalls);
+		binWalls = null;
 
 		SDL_FreeSurface(imageWalls);
 		imageWalls = null;
@@ -675,7 +688,7 @@ class SDLGui : Gui {
 			binTimeout = 0;
 
 			if (showBin)
-				showSurface(imageBin);
+				showSurface(binWalls);
 			else
 				showSurface(scratch);
 
@@ -786,10 +799,10 @@ class SDLGui : Gui {
 
 		/* No need to blit for a single pixel. */
 		pixelColor(scratch, coord, colorWall);
-		pixelColor(imageBin, coord, colorWall);
+		pixelColor(binWalls, coord, colorWall);
 
 		mergeUpdateSurface(scratch, coord, Coord2D(1, 1));
-		mergeUpdateSurface(imageBin, coord, Coord2D(1, 1));
+		mergeUpdateSurface(binWalls, coord, Coord2D(1, 1));
 	}
 
 
@@ -1008,7 +1021,7 @@ class SDLGui : Gui {
 			binTimeout = SDL_GetTicks() + BINTIMEOUT;
 			binHasTimeout = true;
 			showBin = true;
-			showSurface(imageBin);
+			showSurface(binWalls);
 		}
 		callbacks.thresholdChange(thresh);
 	}
@@ -1059,8 +1072,11 @@ class SDLGui : Gui {
 	/* Hand-drawn walls. */
 	private SDL_Surface* imageWalls;
 
-	/* Binarized image + hand-drawn walls. */
+	/* Binarized image. */
 	private SDL_Surface* imageBin;
+
+	/* Binarized image + hand-drawn walls. */
+	private SDL_Surface* binWalls;
 
 	/* Input image + hand-drawn walls + progression. */
 	private SDL_Surface* scratch;
