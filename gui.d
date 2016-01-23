@@ -119,6 +119,10 @@ class SDLGui : Gui {
 
 
 	~this() {
+		if (textSurf != null)
+			SDL_FreeSurface(textSurf);
+		textSurf = null;
+
 		if (image != null)
 			SDL_FreeSurface(image);
 		image = null;
@@ -246,6 +250,10 @@ class SDLGui : Gui {
 
 
 	void finish() {
+		if (textSurf != null)
+			SDL_FreeSurface(textSurf);
+		textSurf = null;
+
 		SDL_FreeSurface(image);
 		image = null;
 
