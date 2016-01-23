@@ -249,6 +249,9 @@ class SDLGui : Gui {
 		SDL_FreeSurface(image);
 		image = null;
 
+		SDL_FreeSurface(scratch);
+		scratch = null;
+
 		SDL_FreeSurface(screen);
 		screen = null;
 	}
