@@ -426,6 +426,7 @@ class SDLGui : Gui {
 	void disable() {
 		state = State.DISABLED;
 		showBin = false;
+		drawingWall = false;
 		showSurface(scratch);
 	}
 
@@ -535,6 +536,32 @@ class SDLGui : Gui {
 
 
 
+	private void handleActive(ref SDL_ActiveEvent e) {
+		with (SDL_AppState) {
+			if (e.gain == 0 && (e.state & (INPUTFOCUS | ACTIVE)) != 0)
+				drawingWall = false;
+		}
+	}
+
+
+
+	private void handleEventMouseDown(ref SDL_MouseButtonEvent e) {
+		Coord2D coord = Coord2D(e.x, e.y);
+
+		switch (state) {
+		case State.ADD_WALL:
+			drawingWall = true;
+			drawWallStart = coord;
+			callbacks.addWall(coord, coord);
+			break;
+
+		default:
+			break;
+		}
+	}
+
+
+
 	private void handleEventMouseUp(ref SDL_MouseButtonEvent e) {
 		Coord2D coord = Coord2D(e.x, e.y);
 
@@ -551,7 +578,29 @@ class SDLGui : Gui {
 			state = State.NONE;
 			break;
 
-		case State.NONE:
+		case State.ADD_WALL:
+			callbacks.addWall(drawWallStart, coord);
+			drawingWall = false;
+			break;
+
+		default:
+			break;
+		}
+	}
+
+
+
+	private void handleEventMouseMotion(ref SDL_MouseMotionEvent e) {
+		Coord2D coord = Coord2D(e.x, e.y);
+
+		switch (state) {
+		case State.ADD_WALL:
+			if (drawingWall) {
+				callbacks.addWall(drawWallStart, coord);
+				drawWallStart = coord;
+			}
+			break;
+
 		default:
 			break;
 		}
@@ -626,6 +675,18 @@ class SDLGui : Gui {
 				eventChangeThreshold(cast(ubyte)(thresh + 1));
 			break;
 
+		case SDLKey.SDLK_w:
+			if (state != State.ADD_WALL)
+				state = State.ADD_WALL;
+			else
+				state = State.NONE;
+
+			if (state == State.ADD_WALL)
+				displayMessage("Click to add walls");
+			else
+				displayMessage("No more walls");
+			break;
+
 		default:
 			callbacks.unhandledKey();
 			break;
@@ -641,8 +702,20 @@ class SDLGui : Gui {
 			callbacks.quit();
 			break;
 
+		case SDL_EventType.ACTIVEEVENT:
+			handleActive(event.active);
+			break;
+
+		case SDL_EventType.MOUSEBUTTONDOWN:
+			handleEventMouseDown(event.button);
+			break;
+
 		case SDL_EventType.MOUSEBUTTONUP:
 			handleEventMouseUp(event.button);
+			break;
+
+		case SDL_EventType.MOUSEMOTION:
+			handleEventMouseMotion(event.motion);
 			break;
 
 		case SDL_EventType.KEYDOWN:
@@ -932,7 +1005,7 @@ class SDLGui : Gui {
 
 
 
-	private enum State {NONE, START_COORD, END_COORD, DISABLED};
+	private enum State {NONE, START_COORD, END_COORD, ADD_WALL, DISABLED};
 
 
 
@@ -956,6 +1029,8 @@ class SDLGui : Gui {
 	private bool binHasTimeout;
 	private uint32_t binTimeout;
 	private ubyte thresh;
+	private bool drawingWall;
+	private Coord2D drawWallStart;
 	private State state;
 
 	private bool hasBufferedEvent;
