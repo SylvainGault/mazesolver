@@ -54,7 +54,7 @@ interface Gui {
 	void disable();
 
 	/* Reset the GUI display and re-enable controls. */
-	void reset();
+	void reset(bool walls = false);
 
 	/* Handle one event and return. Just return if there's no event. */
 	void handleOneEvent();
@@ -445,16 +445,35 @@ class SDLGui : Gui {
 
 
 
-	void reset() {
+	void reset(bool walls = false) {
 		int err;
 
 		err = SDL_BlitSurface(image, null, scratch, null);
 		sdl_enforce(err == 0);
 
-		err = SDL_BlitSurface(imageWalls, null, scratch, null);
+		err = SDL_BlitSurface(imageBin, null, binWalls, null);
 		sdl_enforce(err == 0);
 
+		if (walls) {
+			/* White is the transparent color-key. */
+			uint32_t white;
+			white = SDL_MapRGB(imageWalls.format, 255, 255, 255);
+			err = SDL_FillRect(imageWalls, null, white);
+			sdl_enforce(err == 0);
+		} else {
+			/*
+			 * Only blit the walls onto the scratch and binWalls if
+			 * we didn't reset it.
+			 */
+			err = SDL_BlitSurface(imageWalls, null, scratch, null);
+			sdl_enforce(err == 0);
+
+			err = SDL_BlitSurface(imageWalls, null, binWalls, null);
+			sdl_enforce(err == 0);
+		}
+
 		mergeUpdateSurface(scratch, Coord2D(0, 0), imageSize());
+		mergeUpdateSurface(binWalls, Coord2D(0, 0), imageSize());
 
 		state = State.NONE;
 	}
