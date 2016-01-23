@@ -271,7 +271,7 @@ class SDLGui : Gui {
 
 
 	void disable() {
-		disabled = true;
+		state = State.DISABLED;
 	}
 
 
@@ -399,7 +399,7 @@ class SDLGui : Gui {
 	private void handleEventKeyUp(ref SDL_KeyboardEvent e) {
 		enum alwaysAllowed = [SDLKey.SDLK_q, SDLKey.SDLK_ESCAPE];
 
-		if (disabled && !alwaysAllowed.canFind(e.keysym.sym)) {
+		if (state == State.DISABLED && !alwaysAllowed.canFind(e.keysym.sym)) {
 			callbacks.unhandledKey();
 			return;
 		}
@@ -675,7 +675,6 @@ class SDLGui : Gui {
 	private static immutable int fontSize = 18;
 
 	private bool wantQuit;
-	private bool disabled;
 	private Coord2D updateMin, updateMax;
 	private uint32_t lastFrame, lastPoll;
 	private TTF_Font* font;
