@@ -538,7 +538,7 @@ class SDLGui : Gui {
 			textRect.h = cast(typeof(textRect.h))textSurf.h;
 
 			if (intersectRect(&textRect, &rect)) {
-				err = SDL_BlitSurface(textSurf, &textRect, screen, null);
+				err = SDL_BlitSurface(textSurf, null, screen, &textRect);
 				sdl_enforce(err == 0);
 			}
 		}
