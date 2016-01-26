@@ -594,7 +594,7 @@ class SDLGui : Gui {
 
 
 
-	private void handleEventMouseUp(ref SDL_MouseButtonEvent e) {
+	private void handleEventMouseUpLeft(ref SDL_MouseButtonEvent e) {
 		Coord2D coord = Coord2D(e.x, e.y);
 
 		switch (state) {
@@ -618,6 +618,13 @@ class SDLGui : Gui {
 		default:
 			break;
 		}
+	}
+
+
+
+	private void handleEventMouseUp(ref SDL_MouseButtonEvent e) {
+		if (e.button == 1)
+			handleEventMouseUpLeft(e);
 	}
 
 
