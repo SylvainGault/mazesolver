@@ -1,7 +1,7 @@
 /* Header code adapted from SDL_video.h */
 module sdl.video;
 
-import core.stdc.stdint;
+public import core.stdc.stdint : uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t;
 import std.bitmanip;
 
 import sdl.rwops;
