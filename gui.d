@@ -622,9 +622,26 @@ class SDLGui : Gui {
 
 
 
+	private void handleEventMouseUpWheel(ref SDL_MouseButtonEvent e) {
+		SDLMod mod = SDL_GetModState();
+
+		/* Only Ctrl+Wheel does something. */
+		if ((mod & SDLMod.KMOD_CTRL) == 0)
+			return;
+
+		if (e.button == 4 && zoomLevel > -10)
+			zoomLevel--;
+		else if (e.button == 5 && zoomLevel < 10)
+			zoomLevel++;
+	}
+
+
+
 	private void handleEventMouseUp(ref SDL_MouseButtonEvent e) {
 		if (e.button == 1)
 			handleEventMouseUpLeft(e);
+		else if (e.button == 4 || e.button == 5)
+			handleEventMouseUpWheel(e);
 	}
 
 
@@ -1087,6 +1104,7 @@ class SDLGui : Gui {
 	private ubyte thresh;
 	private bool drawingWall;
 	private Coord2D drawWallStart;
+	private int zoomLevel;
 	private State state;
 
 	private bool hasBufferedEvent;
