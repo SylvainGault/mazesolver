@@ -194,6 +194,8 @@ class SDLGui : Gui {
 
 
 	void displayMessage(string msg, uint time = 3000) {
+		Coord2D size;
+
 		removeMessage();
 
 		textSurf = TTF_RenderUTF8_Blended(font, msg.toStringz, textColor);
@@ -201,7 +203,8 @@ class SDLGui : Gui {
 
 		/* /!\ Do not optimize textSurf as it contains an alpha channel. */
 
-		mergeUpdate(textPos, Coord2D(textSurf.w, textSurf.h));
+		size = coordZoomToImage(Coord2D(textSurf.w, textSurf.h));
+		mergeUpdate(textPos, size);
 
 		/* Remember to remove that text (or not). */
 
@@ -217,13 +220,15 @@ class SDLGui : Gui {
 
 
 	void removeMessage() {
+		Coord2D size;
 		int err;
 
 		if (textSurf == null)
 			return;
 
 		/* Say we've modified the area where was the text. */
-		mergeUpdate(textPos, Coord2D(textSurf.w, textSurf.h));
+		size = coordZoomToImage(Coord2D(textSurf.w, textSurf.h));
+		mergeUpdate(textPos, size);
 
 		SDL_FreeSurface(textSurf);
 		textSurf = null;
@@ -578,7 +583,7 @@ class SDLGui : Gui {
 
 
 	private void handleEventMouseDown(ref SDL_MouseButtonEvent e) {
-		Coord2D coord = Coord2D(e.x, e.y);
+		Coord2D coord = coordZoomToImage(Coord2D(e.x, e.y));
 
 		switch (state) {
 		case State.ADD_WALL:
@@ -595,7 +600,7 @@ class SDLGui : Gui {
 
 
 	private void handleEventMouseUpLeft(ref SDL_MouseButtonEvent e) {
-		Coord2D coord = Coord2D(e.x, e.y);
+		Coord2D coord = coordZoomToImage(Coord2D(e.x, e.y));
 
 		switch (state) {
 		case State.START_COORD:
@@ -663,7 +668,7 @@ class SDLGui : Gui {
 			e.yrel += m.yrel;
 		}
 
-		coord = Coord2D(e.x, e.y);
+		coord = coordZoomToImage(Coord2D(e.x, e.y));
 
 		switch (state) {
 		case State.ADD_WALL:
@@ -1068,6 +1073,22 @@ class SDLGui : Gui {
 			showSurface(binWalls);
 		}
 		callbacks.thresholdChange(thresh);
+	}
+
+
+
+	private Coord2D coordZoomToImage(Coord2D c) {
+		Coord2D coord;
+
+		if (zoomLevel >= 0) {
+			immutable int factor = 1 << zoomLevel;
+			coord = Coord2D(c.x / factor, c.y / factor);
+		} else {
+			immutable int factor = 1 << -zoomLevel;
+			coord = Coord2D(c.x * factor, c.y * factor);
+		}
+
+		return coord;
 	}
 
 
