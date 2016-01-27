@@ -869,6 +869,12 @@ class SDLGui : Gui {
 			if (updateMax.x == 0 || updateMax.y == 0)
 				return;
 
+			if (updateMin.x >= image.w || updateMin.y >= image.h)
+				return;
+
+			updateMax.x = min(updateMax.x, image.w);
+			updateMax.y = min(updateMax.y, image.h);
+
 			rect.x = cast(typeof(rect.x))updateMin.x;
 			rect.y = cast(typeof(rect.y))updateMin.y;
 			rect.w = cast(typeof(rect.w))(updateMax.x - updateMin.x);
