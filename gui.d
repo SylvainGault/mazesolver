@@ -882,8 +882,8 @@ class SDLGui : Gui {
 		} else {
 			rect.x = 0;
 			rect.y = 0;
-			rect.w = cast(typeof(rect.w))screen.w;
-			rect.h = cast(typeof(rect.w))screen.h;
+			rect.w = cast(typeof(rect.w))image.w;
+			rect.h = cast(typeof(rect.w))image.h;
 		}
 
 
