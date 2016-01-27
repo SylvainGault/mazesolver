@@ -114,6 +114,7 @@ import std.algorithm : min, max, canFind;
 import std.string : toStringz, fromStringz;
 import std.exception : enforce;
 import std.conv : to;
+import core.stdc.string : memcpy;
 import sdl.sdl;
 import sdl.image;
 import sdl.ttf;
@@ -629,15 +630,32 @@ class SDLGui : Gui {
 
 	private void handleEventMouseUpWheel(ref SDL_MouseButtonEvent e) {
 		SDLMod mod = SDL_GetModState();
+		int newZoomLevel;
+		uint w, h;
 
 		/* Only Ctrl+Wheel does something. */
 		if ((mod & SDLMod.KMOD_CTRL) == 0)
 			return;
 
 		if (e.button == 4 && zoomLevel > -10)
-			zoomLevel--;
+			newZoomLevel = zoomLevel - 1;
 		else if (e.button == 5 && zoomLevel < 10)
-			zoomLevel++;
+			newZoomLevel = zoomLevel + 1;
+
+		if (newZoomLevel >= 0) {
+			w = image.w * (1 << newZoomLevel);
+			h = image.h * (1 << newZoomLevel);
+		} else {
+			w = image.w / (1 << -newZoomLevel);
+			h = image.h / (1 << -newZoomLevel);
+		}
+
+		if (!SDL_VideoModeOK(w, h, screen.format.BitsPerPixel, screen.flags))
+			return;
+
+		screen = SDL_SetVideoMode(w, h, 0, screen.flags);
+		zoomLevel = newZoomLevel;
+		mergeUpdate(Coord2D(0, 0), imageSize());
 	}
 
 
@@ -887,7 +905,7 @@ class SDLGui : Gui {
 		}
 
 
-		err = SDL_BlitSurface(surfInScreen, &rect, screen, &rect);
+		err = screenBlitScale(surfInScreen, &rect);
 		sdl_enforce(err == 0);
 
 		if (textSurf != null) {
@@ -908,6 +926,159 @@ class SDLGui : Gui {
 		updateMin = typeof(updateMin).init;
 		updateMax = typeof(updateMax).init;
 		lastFrame = now;
+	}
+
+
+
+	private int screenBlitScale(SDL_Surface* from, SDL_Rect* src) {
+		if (zoomLevel == 0)
+			return SDL_BlitSurface(from, src, screen, src);
+		else if (zoomLevel > 0)
+			return screenBlitScaleUp(from, src);
+		else {
+			return screenBlitScaleDown(from, src);
+		}
+	}
+
+
+
+	/* Assume the source surface has the same format as screen. */
+	private int screenBlitScaleDown(SDL_Surface* from, SDL_Rect* src) {
+		immutable int factor = 1 << -zoomLevel;
+		immutable ubyte bytepp = from.format.BytesPerPixel;
+		SDL_Surface* to = screen;
+		void* fromline, toline;
+
+		assert(*from.format == *to.format, "Not same format");
+
+		src.x /= factor;
+		src.y /= factor;
+		src.w /= factor;
+		src.h /= factor;
+
+		SDL_LockSurface(from);
+		SDL_LockSurface(to);
+
+		fromline = from.pixels + from.pitch * src.y * factor;
+		toline = to.pixels + to.pitch * src.y;
+
+		foreach (y; 0 .. src.h) {
+			void* frompixel = fromline + bytepp * src.x * factor;
+			void* topixel = toline + bytepp * src.x;
+
+			foreach (x; 0 .. src.w) {
+				uint32_t value;
+				assert(value.sizeof >= bytepp);
+
+				value = pixelAverage(frompixel, from.pitch, from.format);
+				memcpy(topixel, &value, bytepp);
+
+				frompixel += bytepp * factor;
+				topixel += bytepp;
+			}
+
+			fromline += from.pitch * factor;
+			toline += to.pitch;
+		}
+
+		SDL_UnlockSurface(to);
+		SDL_UnlockSurface(from);
+
+		return 0;
+	}
+
+
+
+	private uint32_t pixelAverage(void* firstpx, uint16_t pitch, SDL_PixelFormat* format) {
+		immutable int factor = 1 << -zoomLevel;
+		immutable ubyte bytepp = format.BytesPerPixel;
+		immutable uint npx = factor * factor;
+		uint rsum, gsum, bsum;
+		ubyte r, g, b;
+
+		foreach (y; 0 .. factor) {
+			void* pixel = firstpx;
+
+			foreach (x; 0 .. factor) {
+				SDL_GetRGB(*cast(uint32_t*)pixel, format, &r, &g, &b);
+				rsum += r;
+				gsum += g;
+				bsum += b;
+
+				pixel += bytepp;
+			}
+
+			firstpx += pitch;
+		}
+
+		r = cast(typeof(r))(rsum / npx);
+		g = cast(typeof(g))(gsum / npx);
+		b = cast(typeof(b))(bsum / npx);
+
+		return SDL_MapRGB(format, r, g, b);
+	}
+
+
+
+	private int screenBlitScaleUp(SDL_Surface* from, SDL_Rect* src) {
+		immutable int factor = 1 << zoomLevel;
+		immutable ubyte bytepp = from.format.BytesPerPixel;
+		SDL_Surface* to = screen;
+		void* fromline, toline;
+
+		assert(*from.format == *to.format, "Not same format");
+
+		SDL_LockSurface(from);
+		SDL_LockSurface(to);
+
+		fromline = from.pixels + from.pitch * src.y;
+		toline = to.pixels + to.pitch * src.y * factor;
+
+		foreach (y; 0 .. src.h) {
+			void* frompixel = fromline + src.x * bytepp;
+			void* topixel = toline + src.x * bytepp * factor;
+
+			foreach (x; 0 .. src.w) {
+				uint32_t value;
+				assert(value.sizeof >= bytepp);
+
+				memcpy(&value, frompixel, bytepp);
+				paintPixel(topixel, to.pitch, value, bytepp);
+
+				frompixel += bytepp;
+				topixel += bytepp * factor;
+			}
+
+			fromline += from.pitch;
+			toline += to.pitch * factor;
+		}
+
+		SDL_UnlockSurface(to);
+		SDL_UnlockSurface(from);
+
+		src.x *= factor;
+		src.y *= factor;
+		src.w *= factor;
+		src.h *= factor;
+
+		return 0;
+	}
+
+
+
+	private void paintPixel(void* line, uint16_t pitch, uint32_t value, ubyte bytepp) {
+		immutable int factor = 1 << zoomLevel;
+
+		foreach (y; 0 .. factor) {
+			void* pixel = line;
+
+			foreach (x; 0 .. factor) {
+				memcpy(pixel, &value, bytepp);
+				pixel += bytepp;
+			}
+
+			line += pitch;
+		}
 	}
 
 
