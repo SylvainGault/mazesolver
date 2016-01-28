@@ -384,11 +384,10 @@ class SDLGui : Gui {
 		image = optimizeSurface(image);
 		sdl_enforce(image != null);
 
-		/* No need to optimize scratch. */
-		scratch = SDL_ConvertSurface(image, image.format, image.flags);
+		scratch = cloneSurface(image, true);
 		sdl_enforce(scratch != null);
 
-		imageBin = SDL_ConvertSurface(image, image.format, image.flags);
+		imageBin = cloneSurface(image, false);
 		sdl_enforce(imageBin != null);
 
 		/* Fill the binary image with white by default. */
@@ -396,11 +395,11 @@ class SDLGui : Gui {
 		err = SDL_FillRect(imageBin, null, white);
 		sdl_enforce(err == 0);
 
-		binWalls = SDL_ConvertSurface(imageBin, imageBin.format, imageBin.flags);
-		sdl_enforce(binWalls != null);
-
-		imageWalls = SDL_ConvertSurface(imageBin, imageBin.format, imageBin.flags);
+		imageWalls = cloneSurface(imageBin, true);
 		sdl_enforce(imageWalls != null);
+
+		binWalls = cloneSurface(imageBin, true);
+		sdl_enforce(binWalls != null);
 
 		/* White is transparent. */
 		err = SDL_SetColorKey(imageWalls, SDL_InternalFlags.SRCCOLORKEY, white);
@@ -1100,6 +1099,33 @@ class SDLGui : Gui {
 
 		SDL_FreeSurface(input);
 		return output;
+	}
+
+
+
+	private static SDL_Surface* cloneSurface(SDL_Surface* s, bool data) {
+		immutable uint32_t f = s.flags;
+		immutable int w = s.w;
+		immutable int h = s.h;
+		immutable int d = s.format.BitsPerPixel;
+		immutable uint32_t r = s.format.Rmask;
+		immutable uint32_t g = s.format.Gmask;
+		immutable uint32_t b = s.format.Bmask;
+		immutable uint32_t a = s.format.Amask;
+		SDL_Surface* ret;
+
+		ret = SDL_CreateRGBSurface(f, w, h, d, r, g, b, a);
+
+		/* Clone data with memcpy since the format is the same. */
+		if (data) {
+			SDL_LockSurface(s);
+			SDL_LockSurface(ret);
+			memcpy(ret.pixels, s.pixels, s.pitch * s.h);
+			SDL_UnlockSurface(ret);
+			SDL_UnlockSurface(s);
+		}
+
+		return ret;
 	}
 
 
