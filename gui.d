@@ -1023,33 +1023,28 @@ class SDLGui : Gui {
 		immutable int factor = 1 << zoomLevel;
 		immutable ubyte bytepp = from.format.BytesPerPixel;
 		SDL_Surface* to = screen;
-		void* fromline, toline;
+		void* frompixel, topixel;
 
 		assert(*from.format == *to.format, "Not same format");
 
 		SDL_LockSurface(from);
 		SDL_LockSurface(to);
 
-		fromline = from.pixels + from.pitch * src.y;
-		toline = to.pixels + to.pitch * src.y * factor;
+		frompixel = from.pixels + from.pitch * src.y + src.x * bytepp;
+		topixel = to.pixels + to.pitch * src.y * factor + src.x * bytepp * factor;
 
 		foreach (y; 0 .. src.h) {
-			void* frompixel = fromline + src.x * bytepp;
-			void* topixel = toline + src.x * bytepp * factor;
+			void* tofirstline = topixel;
 
-			foreach (x; 0 .. src.w) {
-				uint32_t value;
-				assert(value.sizeof >= bytepp);
+			screenBlitScaleUpLine(topixel, frompixel, src.w, bytepp);
 
-				memcpy(&value, frompixel, bytepp);
-				paintPixel(topixel, to.pitch, value, bytepp);
+			frompixel += from.pitch;
+			topixel += to.pitch;
 
-				frompixel += bytepp;
-				topixel += bytepp * factor;
+			foreach (i; 1 .. factor) {
+				memcpy(topixel, tofirstline, src.w * bytepp * factor);
+				topixel += to.pitch;
 			}
-
-			fromline += from.pitch;
-			toline += to.pitch * factor;
 		}
 
 		SDL_UnlockSurface(to);
@@ -1065,18 +1060,31 @@ class SDLGui : Gui {
 
 
 
-	private void paintPixel(void* line, uint16_t pitch, uint32_t value, ubyte bytepp) {
+	private void screenBlitScaleUpLine(void* topixel, void* frompixel, uint size, ubyte bytepp) {
 		immutable int factor = 1 << zoomLevel;
 
-		foreach (y; 0 .. factor) {
-			void* pixel = line;
+		foreach (x; 0 .. size) {
+			uint32_t value;
+			assert(value.sizeof >= bytepp);
 
-			foreach (x; 0 .. factor) {
-				memcpy(pixel, &value, bytepp);
-				pixel += bytepp;
+			value = *cast(typeof(value)*)frompixel;
+
+			if (value.sizeof == bytepp) {
+				/* Faster implementation for the common case. */
+				foreach (i; 0 .. factor) {
+					*cast(typeof(value)*)topixel = value;
+					topixel += bytepp;
+				}
+			} else {
+				foreach (i; 0 .. factor - 1) {
+					*cast(typeof(value)*)topixel = value;
+					topixel += bytepp;
+				}
+				memcpy(topixel, &value, bytepp);
+				topixel += bytepp;
 			}
 
-			line += pitch;
+			frompixel += bytepp;
 		}
 	}
 
