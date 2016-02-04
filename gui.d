@@ -138,6 +138,39 @@ class SDLGui : Gui {
 
 
 
+	static this() {
+		/* Initialize formatForColor */
+		import core.bitop : bsf;
+
+		static uint32_t colorToUint(Color c) {
+			static assert(uint32_t.sizeof >= Color.sizeof);
+			uint32_t res;
+			*cast(Color*)&res = c;
+			return res;
+		}
+
+		alias f = formatForColor;
+		immutable uint32_t rmask = colorToUint(Color(255, 0, 0));
+		immutable uint32_t gmask = colorToUint(Color(0, 255, 0));
+		immutable uint32_t bmask = colorToUint(Color(0, 0, 255));
+
+		/*
+		 * Convert the pixels data to an array of struct Color once for
+		 * all.
+		 */
+		static assert(Color.sizeof <= uint32_t.sizeof);
+		f.BytesPerPixel = Color.sizeof;
+		f.BitsPerPixel = Color.sizeof * 8;
+		f.Rmask = rmask;
+		f.Gmask = gmask;
+		f.Bmask = bmask;
+		f.Rshift = cast(typeof(f.Rshift))bsf(f.Rmask);
+		f.Gshift = cast(typeof(f.Gshift))bsf(f.Gmask);
+		f.Bshift = cast(typeof(f.Bshift))bsf(f.Bmask);
+	}
+
+
+
 	~this() {
 		if (textSurf != null)
 			SDL_FreeSurface(textSurf);
@@ -240,56 +273,30 @@ class SDLGui : Gui {
 
 
 	void loadImage(string filename) {
-		import core.bitop : bsf;
-
-		static uint32_t colorToUint(Color c) {
-			static assert(uint32_t.sizeof >= Color.sizeof);
-			uint32_t res;
-			*cast(Color*)&res = c;
-			return res;
-		}
-
 		SDL_Surface* image888;
-		SDL_PixelFormat format;
-		Color* ptr;
-		ubyte* line;
-		immutable uint32_t rmask = colorToUint(Color(255, 0, 0));
-		immutable uint32_t gmask = colorToUint(Color(0, 255, 0));
-		immutable uint32_t bmask = colorToUint(Color(0, 0, 255));
+		void* ptr;
+		void* line;
 
 		image = IMG_Load(filename.toStringz);
 		sdl_enforce(image != null);
 
-		/*
-		 * Convert the pixels data to an array of struct Color once for
-		 * all.
-		 */
-		format.BytesPerPixel = Color.sizeof;
-		format.BitsPerPixel = Color.sizeof * 8;
-		format.Rmask = rmask;
-		format.Gmask = gmask;
-		format.Bmask = bmask;
-		format.Rshift = cast(typeof(format.Rshift))bsf(format.Rmask);
-		format.Gshift = cast(typeof(format.Gshift))bsf(format.Gmask);
-		format.Bshift = cast(typeof(format.Bshift))bsf(format.Bmask);
-
-		image888 = SDL_ConvertSurface(image, &format, 0);
+		/* Second argument should be marked const in the API. */
+		image888 = SDL_ConvertSurface(image, cast(SDL_PixelFormat*)&formatForColor, 0);
 		sdl_enforce(image888 != null);
 
 
 		SDL_LockSurface(image888);
 
-		line = cast(typeof(line))image888.pixels;
-
 		imageData.length = image888.h;
+
+		line = image888.pixels;
 		foreach (y; 0 .. image888.h) {
 			imageData[y].length = image888.w;
 
-			ptr = cast(typeof(ptr))line;
-
+			ptr = line;
 			foreach (x; 0 .. image888.w) {
-				imageData[y][x] = *ptr;
-				ptr++;
+				imageData[y][x] = *cast(Color*)ptr;
+				ptr += image888.format.BytesPerPixel;
 			}
 
 			line += image888.pitch;
@@ -1323,6 +1330,7 @@ class SDLGui : Gui {
 	private static immutable Coord2D textPos = Coord2D(0, 0);
 	private static immutable int fontSize = 18;
 	private static immutable BINTIMEOUT = 3000;
+	private static immutable SDL_PixelFormat formatForColor;
 
 	private bool wantQuit;
 	private Coord2D updateMin, updateMax;
