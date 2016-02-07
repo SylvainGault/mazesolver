@@ -93,6 +93,7 @@ interface GuiCallbacks {
 import std.stdio;
 import std.algorithm : min, max, canFind;
 import std.string : toStringz, fromStringz;
+import std.exception : enforce;
 import std.conv : to;
 import sdl.sdl;
 import sdl.image;
@@ -630,7 +631,7 @@ class SDLGui : Gui {
 
 
 	private static void sdl_enforce(bool cond) {
-		assert(cond, SDL_GetError().fromStringz);
+		enforce(cond, SDL_GetError().fromStringz);
 	}
 
 
