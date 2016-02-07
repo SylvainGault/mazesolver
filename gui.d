@@ -114,7 +114,7 @@ import std.algorithm : min, max, canFind;
 import std.string : toStringz, fromStringz;
 import std.exception : enforce;
 import std.conv : to;
-import core.stdc.string : memcpy;
+import core.stdc.string : memcpy, memset;
 import sdl.sdl;
 import sdl.image;
 import sdl.ttf;
@@ -952,76 +952,103 @@ class SDLGui : Gui {
 	private int screenBlitScaleDown(SDL_Surface* from, SDL_Rect* src) {
 		immutable int factor = 1 << -zoomLevel;
 		immutable ubyte bytepp = from.format.BytesPerPixel;
+		immutable uint npx = factor * factor;
 		SDL_Surface* to = screen;
 		void* fromline, toline;
 
 		assert(*from.format == *to.format, "Not same format");
 
-		src.x /= factor;
-		src.y /= factor;
-		src.w /= factor;
-		src.h /= factor;
+		sums.length = src.w / factor;
 
 		SDL_LockSurface(from);
 		SDL_LockSurface(to);
 
-		fromline = from.pixels + from.pitch * src.y * factor;
-		toline = to.pixels + to.pitch * src.y;
+		fromline = from.pixels + from.pitch * src.y + bytepp * src.x;
+		toline = to.pixels + to.pitch * (src.y / factor) + bytepp * (src.x / factor);
 
-		foreach (y; 0 .. src.h) {
-			void* frompixel = fromline + bytepp * src.x * factor;
-			void* topixel = toline + bytepp * src.x;
+		foreach (y; 0 .. src.h / factor) {
+			void* topixel = toline;
 
-			foreach (x; 0 .. src.w) {
+			screenBlitScaleDownLine(fromline, from.pitch,
+			                        from.format, src.w / factor * factor);
+			fromline += from.pitch * factor;
+
+			foreach (x; 0 .. src.w / factor) {
 				uint32_t value;
-				assert(value.sizeof >= bytepp);
+				Color c;
 
-				value = pixelAverage(frompixel, from.pitch, from.format);
-				memcpy(topixel, &value, bytepp);
+				c.r = cast(ubyte)(sums[x].rsum / npx);
+				c.g = cast(ubyte)(sums[x].gsum / npx);
+				c.b = cast(ubyte)(sums[x].bsum / npx);
+				value = SDL_MapRGB(to.format, c.r, c.g, c.b);
 
-				frompixel += bytepp * factor;
+				/* Direct assignment is faster. */
+				if (bytepp == value.sizeof)
+					*cast(typeof(value)*)topixel = value;
+				else
+					memcpy(topixel, &value, bytepp);
+
 				topixel += bytepp;
 			}
-
-			fromline += from.pitch * factor;
 			toline += to.pitch;
 		}
 
 		SDL_UnlockSurface(to);
 		SDL_UnlockSurface(from);
 
+		src.x /= factor;
+		src.y /= factor;
+		src.w /= factor;
+		src.h /= factor;
+
 		return 0;
 	}
 
 
 
-	private uint32_t pixelAverage(void* firstpx, uint16_t pitch, SDL_PixelFormat* format) {
-		immutable int factor = 1 << -zoomLevel;
-		immutable ubyte bytepp = format.BytesPerPixel;
-		immutable uint npx = factor * factor;
-		uint rsum, gsum, bsum;
-		ubyte r, g, b;
+	private void screenBlitScaleDownLine(void* line, uint16_t pitch,
+	                                     const SDL_PixelFormat* f, size_t size) {
 
-		foreach (y; 0 .. factor) {
-			void* pixel = firstpx;
+		Color getRGB(void* pixel) {
+			Color c = void;
+			uint32_t data = void;
 
-			foreach (x; 0 .. factor) {
-				SDL_GetRGB(*cast(uint32_t*)pixel, format, &r, &g, &b);
-				rsum += r;
-				gsum += g;
-				bsum += b;
+			/* Call inlined for performance reasons. */
+			//SDL_GetRGB(*cast(uint32_t*)pixel, format, &c.r, &c.g, &c.b);
 
-				pixel += bytepp;
+			/* Special case handled directly for performance again. */
+			if (f.Rmask == 0xff0000 && f.Gmask == 0x00ff00 && f.Bmask == 0x0000ff) {
+				c = *cast(Color*)pixel;
+				return Color(c.b, c.g, c.r);
+			} else if (f.Rmask == 0x0000ff && f.Gmask == 0x00ff00 && f.Bmask == 0xff0000) {
+				return *cast(Color*)pixel;
 			}
-
-			firstpx += pitch;
+			data = *cast(typeof(data)*)pixel;
+			c.r = cast(ubyte)((data & f.Rmask) >> f.Rshift);
+			c.g = cast(ubyte)((data & f.Gmask) >> f.Gshift);
+			c.b = cast(ubyte)((data & f.Bmask) >> f.Bshift);
+			return c;
 		}
 
-		r = cast(typeof(r))(rsum / npx);
-		g = cast(typeof(g))(gsum / npx);
-		b = cast(typeof(b))(bsum / npx);
 
-		return SDL_MapRGB(format, r, g, b);
+		immutable int factor = 1 << -zoomLevel;
+		immutable ubyte bytepp = f.BytesPerPixel;
+
+
+		memset(sums.ptr, 0, sums[0].sizeof * sums.length);
+
+		foreach (i; 0 .. factor) {
+			void* pixel = line;
+
+			foreach (x; 0 .. size) {
+				Color c = getRGB(pixel);
+				sums[x / factor].rsum += c.r;
+				sums[x / factor].gsum += c.g;
+				sums[x / factor].bsum += c.b;
+				pixel += bytepp;
+			}
+			line += pitch;
+		}
 	}
 
 
@@ -1319,6 +1346,10 @@ class SDLGui : Gui {
 
 	private enum State {NONE, START_COORD, END_COORD, ADD_WALL, DISABLED};
 
+	private struct ColorSum {
+		uint rsum, gsum, bsum;
+	}
+
 
 
 	private static immutable int FPS = 60;
@@ -1349,6 +1380,9 @@ class SDLGui : Gui {
 
 	private bool hasBufferedEvent;
 	private SDL_Event bufferedEvent;
+
+	/* Buffer used to scale down. */
+	private ColorSum sums[];
 
 	/* Input image. */
 	private SDL_Surface* image;
