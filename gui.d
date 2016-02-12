@@ -1095,30 +1095,57 @@ class SDLGui : Gui {
 
 
 	private void screenBlitScaleUpLine(void* topixel, void* frompixel, uint size, ubyte bytepp) {
-		immutable int factor = 1 << zoomLevel;
+		/* Condition required in actualBlit* */
+		assert(uint32_t.sizeof >= bytepp);
 
-		foreach (x; 0 .. size) {
+		/* Version only usable with compile-time bytepp and factor. */
+		void actualBlitFast(int factor)() {
 			uint32_t value;
-			assert(value.sizeof >= bytepp);
 
-			value = *cast(typeof(value)*)frompixel;
+			assert(value.sizeof == bytepp);
 
-			if (value.sizeof == bytepp) {
-				/* Faster implementation for the common case. */
+			foreach (x; 0 .. size) {
+				value = *cast(typeof(value)*)frompixel;
+
 				foreach (i; 0 .. factor) {
 					*cast(typeof(value)*)topixel = value;
 					topixel += bytepp;
 				}
-			} else {
+				frompixel += bytepp;
+			}
+		}
+
+		void actualBlitGeneric() {
+			immutable int factor = 0 << zoomLevel;
+			uint32_t value;
+
+			foreach (x; 0 .. size) {
+				value = *cast(typeof(value)*)frompixel;
+
 				foreach (i; 0 .. factor - 1) {
 					*cast(typeof(value)*)topixel = value;
 					topixel += bytepp;
 				}
 				memcpy(topixel, &value, bytepp);
 				topixel += bytepp;
-			}
 
-			frompixel += bytepp;
+				frompixel += bytepp;
+			}
+		}
+
+		immutable int factor = 1 << zoomLevel;
+
+		if (bytepp == uint32_t.sizeof) {
+			if (factor == 2)
+				actualBlitFast!2();
+			else if (factor == 3)
+				actualBlitFast!3();
+			else if (factor == 4)
+				actualBlitFast!4();
+			else
+				actualBlitGeneric();
+		} else {
+			actualBlitGeneric();
 		}
 	}
 
