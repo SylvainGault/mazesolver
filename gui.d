@@ -954,9 +954,18 @@ class SDLGui : Gui {
 		immutable ubyte bytepp = from.format.BytesPerPixel;
 		immutable uint npx = factor * factor;
 		SDL_Surface* to = screen;
+		uint xmax, ymax;
 		void* fromline, toline;
 
 		assert(*from.format == *to.format, "Not same format");
+
+		/* Align src to the macro-pixels. */
+		xmax = src.x + src.w;
+		ymax = src.y + src.h;
+		src.x = cast(typeof(src.x))(src.x / factor * factor);
+		src.y = cast(typeof(src.y))(src.y / factor * factor);
+		src.w = cast(typeof(src.w))((xmax + factor - 1) / factor * factor - src.x);
+		src.h = cast(typeof(src.h))((ymax + factor - 1) / factor * factor - src.y);
 
 		sums.length = src.w / factor;
 
