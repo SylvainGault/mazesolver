@@ -339,13 +339,15 @@ version (D_SIMD) {
 
 	/* Quick and dirty way to convert the enum XMM name to an assembly
 	 * mnemonic. (The actual numeric value is not used.) */
-	static string mnemonic(XMM opcode)() {
+	pure @safe static string mnemonic(XMM opcode)() {
 		import std.conv : to;
 		import std.string;
+		if (opcode == XMM.LODDQU || opcode == XMM.STODQU)
+			return "movdqu";
 		return to!string(opcode).toLower;
 	}
 
-	pure nothrow @safe @nogc void16 __simd(XMM opcode, alias void16 op1, alias void16 op2)() {
+	pure nothrow @safe @nogc void16 __simd(XMM opcode, alias void16 op1, uint line = __LINE__)() {
 		void16 ret = void;
 		enum string ins = "\"" ~ mnemonic!opcode ~ "\"";
 
@@ -353,6 +355,19 @@ version (D_SIMD) {
 			/* Empty leading string needed for the parser to
 			 * recognize this as a GCC inline asm and not D inline
 			 * asm. */
+			"" ~ mixin(ins) ~ " %1, %0\n\t"
+			: "=x"(ret)
+			: "x"(op1)
+			;
+		}
+		return ret;
+	}
+
+	pure nothrow @safe @nogc void16 __simd(XMM opcode, alias void16 op1, alias void16 op2, uint line = __LINE__)() {
+		void16 ret = void;
+		enum string ins = "\"" ~ mnemonic!opcode ~ "\"";
+
+		asm pure nothrow @nogc @trusted {
 			"" ~ mixin(ins) ~ " %2, %0\n\t"
 			: "=x"(ret)
 			: "0"(op1), "x"(op2)
@@ -362,7 +377,7 @@ version (D_SIMD) {
 	}
 
 	/* This variation is not pure as it modify its first operand. */
-	nothrow @safe @nogc void16 __simd(XMM opcode, alias void16 op1, alias void16 op2, ubyte imm8)() {
+	nothrow @safe @nogc void16 __simd(XMM opcode, alias void16 op1, alias void16 op2, ubyte imm8, uint line = __LINE__)() {
 		enum string ins = "\"" ~ mnemonic!opcode ~ "\"";
 
 		asm pure nothrow @nogc @trusted {
@@ -374,7 +389,7 @@ version (D_SIMD) {
 		return op1;
 	}
 
-	pure nothrow @safe @nogc void16 __simd_ib(XMM opcode, alias void16 op1, ubyte imm8)() {
+	pure nothrow @safe @nogc void16 __simd_ib(XMM opcode, alias void16 op1, ubyte imm8, uint line = __LINE__)() {
 		void16 ret = void;
 		enum string ins = "\"" ~ mnemonic!opcode ~ "\"";
 
@@ -416,172 +431,208 @@ ubyte _MM_SHUFFLE(ubyte fp3, ubyte fp2, ubyte fp1, ubyte fp0) {
 /* A few intrinsics used by libdivide.d. */
 
 /* Set */
-__m128i _mm_set_epi32(alias a, alias b, alias c, alias d)()
+__m128i _mm_set_epi32(alias a, alias b, alias c, alias d, uint line = __LINE__)()
 if (is(typeof(a) : int) && is(typeof(b) : int) && is(typeof(c) : int) && is(typeof(d) : int)) {
 	__m128i ret = void;
 	ret.i4 = [d, b, c, a];
 	return ret;
 }
 
-__m128i _mm_set1_epi64x(alias x)()
+__m128i _mm_set1_epi32(alias a, uint line = __LINE__)()
+if (is(typeof(a) : int)) {
+	return _mm_set_epi32!(a, a, a, a, line);
+}
+
+__m128i _mm_setzero_si128(uint line = __LINE__)() {
+	return _mm_set1_epi32!(0, line);
+}
+
+__m128i _mm_set1_epi64x(alias x, uint line = __LINE__)()
 if (is(typeof(x) : ulong)) {
 	__m128i ret = void;
 	ret.ul2 = [x, x];
 	return ret;
 }
 
-__m128i _mm_set1_epi8(alias x)()
+__m128i _mm_set1_epi8(alias x, uint line = __LINE__)()
 if (is(typeof(x) : byte)) {
 	__m128i ret = void;
 	ret.b16 = [x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x];
 	return ret;
 }
 
+__m128i _mm_loadu_si128(alias p, uint line = __LINE__)()
+if (is(typeof(p) : const __m128i*)) {
+	__m128i ret = void;
+	void16 retv16 = void;
+	void16 pv16 = p.v16;
+	ret.v16 = __simd!(XMM.LODDQU, retv16, pv16, line);
+	return ret;
+}
+
 /* Shuffle */
-__m128i _mm_shuffle_epi32(alias a, ubyte b)()
+__m128i _mm_shuffle_epi32(alias a, ubyte b, uint line = __LINE__)()
 if (is(typeof(a) : __m128i)) {
 	__m128i ret = void;
 	void16 retv16 = void;
 	void16 av16 = a.v16;
-	ret.v16 = __simd!(XMM.PSHUFD, retv16, av16, b);
+	ret.v16 = __simd!(XMM.PSHUFD, retv16, av16, b, line);
 	return ret;
 }
 
 /* Shift left */
-__m128i _mm_slli_epi64(alias a, ubyte b)()
+__m128i _mm_slli_epi64(alias a, ubyte b, uint line = __LINE__)()
 if (is(typeof(a) : __m128i)) {
 	__m128i ret = void;
 	void16 av16 = a.v16;
-	ret.v16 = __simd_ib!(XMM.PSLLQ, av16, b);
+	ret.v16 = __simd_ib!(XMM.PSLLQ, av16, b, line);
 	return ret;
 }
 
 /* Shift right */
-__m128i _mm_srli_epi64(alias a, ubyte b)()
+__m128i _mm_srli_epi64(alias a, ubyte b, uint line = __LINE__)()
 if (is(typeof(a) : __m128i)) {
 	__m128i ret = void;
 	void16 av16 = a.v16;
-	ret.v16 = __simd_ib!(XMM.PSRLQ, av16, b);
+	ret.v16 = __simd_ib!(XMM.PSRLQ, av16, b, line);
 	return ret;
 }
 
-__m128i _mm_srli_epi32(alias a, ubyte b)()
+__m128i _mm_srli_epi32(alias a, ubyte b, uint line = __LINE__)()
 if (is(typeof(a) : __m128i)) {
 	__m128i ret = void;
 	void16 av16 = a.v16;
-	ret.v16 = __simd_ib!(XMM.PSRLD, av16, b);
+	ret.v16 = __simd_ib!(XMM.PSRLD, av16, b, line);
 	return ret;
 }
 
-__m128i _mm_srl_epi64(alias a, alias b)()
+__m128i _mm_srl_epi64(alias a, alias b, uint line = __LINE__)()
 if (is(typeof(a) : __m128i) && is(typeof(b) : __m128i)) {
 	__m128i ret = void;
 	void16 av16 = a.v16;
 	void16 bv16 = b.v16;
-	ret.v16 = __simd!(XMM.PSRLQ, av16, bv16);
+	ret.v16 = __simd!(XMM.PSRLQ, av16, bv16, line);
 	return ret;
 }
 
-__m128i _mm_srl_epi32(alias a, alias b)()
+__m128i _mm_srl_epi32(alias a, alias b, uint line = __LINE__)()
 if (is(typeof(a) : __m128i) && is(typeof(b) : __m128i)) {
 	__m128i ret = void;
 	void16 av16 = a.v16;
 	void16 bv16 = b.v16;
-	ret.v16 = __simd!(XMM.PSRLD, av16, bv16);
+	ret.v16 = __simd!(XMM.PSRLD, av16, bv16, line);
 	return ret;
 }
 
-__m128i _mm_srai_epi32(alias a, ubyte b)()
+__m128i _mm_srai_epi32(alias a, ubyte b, uint line = __LINE__)()
 if (is(typeof(a) : __m128i)) {
 	__m128i ret = void;
 	void16 av16 = a.v16;
-	ret.v16 = __simd_ib!(XMM.PSRAD, av16, b);
+	ret.v16 = __simd_ib!(XMM.PSRAD, av16, b, line);
+	return ret;
+}
+
+__m128i _mm_sra_epi32(alias a, alias b, uint line = __LINE__)()
+if (is(typeof(a) : __m128i) && is(typeof(b) : __m128i)) {
+	__m128i ret = void;
+	void16 av16 = a.v16;
+	void16 bv16 = b.v16;
+	ret.v16 = __simd!(XMM.PSRAD, av16, bv16, line);
 	return ret;
 }
 
 /* Add */
-__m128i _mm_add_epi64(alias a, alias b)()
+__m128i _mm_add_epi32(alias a, alias b, uint line = __LINE__)()
 if (is(typeof(a) : __m128i) && is(typeof(b) : __m128i)) {
 	__m128i ret = void;
 	void16 av16 = a.v16;
 	void16 bv16 = b.v16;
-	ret.v16 = __simd!(XMM.PADDQ, av16, bv16);
+	ret.v16 = __simd!(XMM.PADDD, av16, bv16, line);
+	return ret;
+}
+
+__m128i _mm_add_epi64(alias a, alias b, uint line = __LINE__)()
+if (is(typeof(a) : __m128i) && is(typeof(b) : __m128i)) {
+	__m128i ret = void;
+	void16 av16 = a.v16;
+	void16 bv16 = b.v16;
+	ret.v16 = __simd!(XMM.PADDQ, av16, bv16, line);
 	return ret;
 }
 
 /* Subtract */
-__m128i _mm_sub_epi32(alias a, alias b)()
+__m128i _mm_sub_epi32(alias a, alias b, uint line = __LINE__)()
 if (is(typeof(a) : __m128i) && is(typeof(b) : __m128i)) {
 	__m128i ret = void;
 	void16 av16 = a.v16;
 	void16 bv16 = b.v16;
-	ret.v16 = __simd!(XMM.PSUBD, av16, bv16);
+	ret.v16 = __simd!(XMM.PSUBD, av16, bv16, line);
 	return ret;
 }
 
-__m128i _mm_sub_epi64(alias a, alias b)()
+__m128i _mm_sub_epi64(alias a, alias b, uint line = __LINE__)()
 if (is(typeof(a) : __m128i) && is(typeof(b) : __m128i)) {
 	__m128i ret = void;
 	void16 av16 = a.v16;
 	void16 bv16 = b.v16;
-	ret.v16 = __simd!(XMM.PSUBQ, av16, bv16);
+	ret.v16 = __simd!(XMM.PSUBQ, av16, bv16, line);
 	return ret;
 }
 
 /* Multiply */
-__m128i _mm_mul_epi32(alias a, alias b)()
+__m128i _mm_mul_epi32(alias a, alias b, uint line = __LINE__)()
 if (is(typeof(a) : __m128i) && is(typeof(b) : __m128i)) {
 	__m128i ret = void;
 	void16 av16 = a.v16;
 	void16 bv16 = b.v16;
-	ret.v16 = __simd!(XMM.PMULDQ, av16, bv16);
+	ret.v16 = __simd!(XMM.PMULDQ, av16, bv16, line);
 	return ret;
 }
-__m128i _mm_mul_epu32(alias a, alias b)()
+__m128i _mm_mul_epu32(alias a, alias b, uint line = __LINE__)()
 if (is(typeof(a) : __m128i) && is(typeof(b) : __m128i)) {
 	__m128i ret = void;
 	void16 av16 = a.v16;
 	void16 bv16 = b.v16;
-	ret.v16 = __simd!(XMM.PMULUDQ, av16, bv16);
+	ret.v16 = __simd!(XMM.PMULUDQ, av16, bv16, line);
 	return ret;
 }
 
 /* Compare */
-__m128i _mm_cmpeq_epi8(alias a, alias b)()
+__m128i _mm_cmpeq_epi8(alias a, alias b, uint line = __LINE__)()
 if (is(typeof(a) : __m128i) && is(typeof(b) : __m128i)) {
 	__m128i ret = void;
 	void16 av16 = a.v16;
 	void16 bv16 = b.v16;
-	ret.v16 = __simd!(XMM.PCMPEQB, av16, bv16);
+	ret.v16 = __simd!(XMM.PCMPEQB, av16, bv16, line);
 	return ret;
 }
 
 /* And */
-__m128i _mm_and_si128(alias a, alias b)()
+__m128i _mm_and_si128(alias a, alias b, uint line = __LINE__)()
 if (is(typeof(a) : __m128i) && is(typeof(b) : __m128i)) {
 	__m128i ret = void;
 	void16 av16 = a.v16;
 	void16 bv16 = b.v16;
-	ret.v16 = __simd!(XMM.PAND, av16, bv16);
+	ret.v16 = __simd!(XMM.PAND, av16, bv16, line);
 	return ret;
 }
 
 /* Or */
-__m128i _mm_or_si128(alias a, alias b)()
+__m128i _mm_or_si128(alias a, alias b, uint line = __LINE__)()
 if (is(typeof(a) : __m128i) && is(typeof(b) : __m128i)) {
 	__m128i ret = void;
 	void16 av16 = a.v16;
 	void16 bv16 = b.v16;
-	ret.v16 = __simd!(XMM.POR, av16, bv16);
+	ret.v16 = __simd!(XMM.POR, av16, bv16, line);
 	return ret;
 }
 
 /* Xor */
-__m128i _mm_xor_si128(alias a, alias b)()
+__m128i _mm_xor_si128(alias a, alias b, uint line = __LINE__)()
 if (is(typeof(a) : __m128i) && is(typeof(b) : __m128i)) {
 	__m128i ret = void;
 	void16 av16 = a.v16;
 	void16 bv16 = b.v16;
-	ret.v16 = __simd!(XMM.PXOR, av16, bv16);
+	ret.v16 = __simd!(XMM.PXOR, av16, bv16, line);
 	return ret;
 }
