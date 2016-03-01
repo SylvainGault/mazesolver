@@ -1159,7 +1159,7 @@ version (LIBDIVIDE_HEADER_ONLY) {
 
 	 */
 
-	class libdivide_internal {
+	struct libdivide_internal {
 	static:
 		version (LIBDIVIDE_USE_SSE2) {
 			/* D doesn't allow mixin directly in alias. */
@@ -1180,7 +1180,7 @@ version (LIBDIVIDE_HEADER_ONLY) {
 			__m128i crash_u64_vector(__m128i, const libdivide_u64_t *) { abort(); return *cast(__m128i*)null; }
 		}
 
-		class divider_base(IntType, DenomType, alias gen_func, alias get_algo, alias do_func, alias vector_func)
+		struct divider_base(IntType, DenomType, alias gen_func, alias get_algo, alias do_func, alias vector_func)
 		if (is(typeof(&gen_func) == DenomType function(IntType)) &&
 		    is(typeof(&get_algo) == int function(const DenomType *)) &&
 		    is(typeof(&do_func) == IntType function(IntType, const DenomType *)) &&
@@ -1284,20 +1284,20 @@ version (LIBDIVIDE_HEADER_ONLY) {
 
 	}
 
-	class divider(T, int ALGO = -1)
+	struct divider(T, int ALGO = -1)
 	{
 	private:
-		libdivide_internal.divider_mid!T.algo!ALGO.divider sub;
+		libdivide_internal.divider_mid!T.algo!ALGO.divider sub = typeof(sub)(1);
 		divider!(S, NEW_ALGO) unswitch(int NEW_ALGO, S)(const ref divider!(S, -1) d);
-		this(const ref libdivide_internal.divider_mid!T.DenomType denom) { sub = new typeof(sub)(denom); }
+		this(const ref libdivide_internal.divider_mid!T.DenomType denom) { sub = typeof(sub)(denom); }
 
 	public:
 
 		/* Ordinary constructor, that takes the divisor as a parameter. */
-		this(T n) { sub = new typeof(sub)(n); }
+		this(T n) { sub = typeof(sub)(n); }
 
 		/* Default constructor, that divides by 1 */
-		this() { sub = new typeof(sub)(1); }
+		//this() { sub = typeof(sub)(1); }
 
 		/* Divides the parameter by the divisor, returning the quotient */
 		T perform_divide(T val) const { return sub.perform_divide(val); }
@@ -1327,7 +1327,7 @@ version (LIBDIVIDE_HEADER_ONLY) {
 	}
 
 	/* Returns a divider specialized for the given algorithm. */
-	divider!(S, NEW_ALGO) unswitch(int NEW_ALGO, S)(const ref divider!(S, -1) d) { return new divider!(S, NEW_ALGO)(d.sub.denom); }
+	divider!(S, NEW_ALGO) unswitch(int NEW_ALGO, S)(const ref divider!(S, -1) d) { return divider!(S, NEW_ALGO)(d.sub.denom); }
 
 
 }
