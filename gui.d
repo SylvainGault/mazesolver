@@ -1020,7 +1020,7 @@ class SDLGui : Gui {
 	private void screenBlitScaleDownLine(void* line, uint16_t pitch,
 	                                     const SDL_PixelFormat* f, size_t size) {
 
-		Color getRGB(void* pixel) {
+		Color getRGB(string rgbformat = "generic")(void* pixel) {
 			Color c = void;
 			uint32_t data = void;
 
@@ -1028,40 +1028,53 @@ class SDLGui : Gui {
 			//SDL_GetRGB(*cast(uint32_t*)pixel, format, &c.r, &c.g, &c.b);
 
 			/* Special case handled directly for performance again. */
-			if (f.Rmask == 0xff0000 && f.Gmask == 0x00ff00 && f.Bmask == 0x0000ff) {
+			static if (rgbformat == "rev") {
 				c = *cast(Color*)pixel;
 				return Color(c.b, c.g, c.r);
-			} else if (f.Rmask == 0x0000ff && f.Gmask == 0x00ff00 && f.Bmask == 0xff0000) {
+			} else static if (rgbformat == "deref") {
 				return *cast(Color*)pixel;
+			} else static if (rgbformat == "generic") {
+				data = *cast(typeof(data)*)pixel;
+				c.r = cast(ubyte)((data & f.Rmask) >> f.Rshift);
+				c.g = cast(ubyte)((data & f.Gmask) >> f.Gshift);
+				c.b = cast(ubyte)((data & f.Bmask) >> f.Bshift);
+				return c;
+			} else {
+				static assert(false, "Wrong template argument for getRGB");
 			}
-			data = *cast(typeof(data)*)pixel;
-			c.r = cast(ubyte)((data & f.Rmask) >> f.Rshift);
-			c.g = cast(ubyte)((data & f.Gmask) >> f.Gshift);
-			c.b = cast(ubyte)((data & f.Bmask) >> f.Bshift);
-			return c;
 		}
 
 
-		immutable int factor = 1 << -zoomLevel;
-		immutable ubyte bytepp = f.BytesPerPixel;
-		divider!uint factorDiv = factor;
+		void sumColors(string rgbformat = "generic")() {
+			immutable uint factor = 1 << -zoomLevel;
+			immutable ubyte bytepp = f.BytesPerPixel;
+			divider!uint factorDiv = factor;
 
+			memset(sums.ptr, 0, sums[0].sizeof * sums.length);
 
-		memset(sums.ptr, 0, sums[0].sizeof * sums.length);
+			foreach (i; 0 .. factor) {
+				void* pixel = line;
 
-		foreach (i; 0 .. factor) {
-			void* pixel = line;
-
-			foreach (x; 0 .. size) {
-				Color c = getRGB(pixel);
-				size_t xf = x / factorDiv;
-				sums[xf].rsum += c.r;
-				sums[xf].gsum += c.g;
-				sums[xf].bsum += c.b;
-				pixel += bytepp;
+				foreach (x; 0 .. size) {
+					Color c = getRGB!rgbformat(pixel);
+					size_t xf = x / factorDiv;
+					sums[xf].rsum += c.r;
+					sums[xf].gsum += c.g;
+					sums[xf].bsum += c.b;
+					pixel += bytepp;
+				}
+				line += pitch;
 			}
-			line += pitch;
 		}
+
+
+		/* Forcing loop unswitching. */
+		if (f.Rmask == 0xff0000 && f.Gmask == 0x00ff00 && f.Bmask == 0x0000ff)
+			sumColors!"rev"();
+		else if (f.Rmask == 0x0000ff && f.Gmask == 0x00ff00 && f.Bmask == 0xff0000)
+			sumColors!"deref"();
+		else
+			sumColors!"generic"();
 	}
 
 
