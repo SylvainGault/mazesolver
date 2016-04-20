@@ -118,6 +118,7 @@ import core.stdc.string : memcpy, memset;
 import sdl.sdl;
 import sdl.image;
 import sdl.ttf;
+import libdivide;
 
 class SDLGui : Gui {
 	public GuiCallbacks callbacks;
@@ -952,7 +953,7 @@ class SDLGui : Gui {
 	private int screenBlitScaleDown(SDL_Surface* from, SDL_Rect* src) {
 		immutable int factor = 1 << -zoomLevel;
 		immutable ubyte bytepp = from.format.BytesPerPixel;
-		immutable uint npx = factor * factor;
+		divider!uint npx = factor * factor;
 		SDL_Surface* to = screen;
 		uint xmax, ymax;
 		void* fromline, toline;
@@ -986,6 +987,7 @@ class SDLGui : Gui {
 				uint32_t value;
 				Color c;
 
+				/* TODO Use libdivide's SSE support? */
 				c.r = cast(ubyte)(sums[x].rsum / npx);
 				c.g = cast(ubyte)(sums[x].gsum / npx);
 				c.b = cast(ubyte)(sums[x].bsum / npx);
@@ -1042,6 +1044,7 @@ class SDLGui : Gui {
 
 		immutable int factor = 1 << -zoomLevel;
 		immutable ubyte bytepp = f.BytesPerPixel;
+		divider!uint factorDiv = factor;
 
 
 		memset(sums.ptr, 0, sums[0].sizeof * sums.length);
@@ -1051,9 +1054,10 @@ class SDLGui : Gui {
 
 			foreach (x; 0 .. size) {
 				Color c = getRGB(pixel);
-				sums[x / factor].rsum += c.r;
-				sums[x / factor].gsum += c.g;
-				sums[x / factor].bsum += c.b;
+				size_t xf = x / factorDiv;
+				sums[xf].rsum += c.r;
+				sums[xf].gsum += c.g;
+				sums[xf].bsum += c.b;
 				pixel += bytepp;
 			}
 			line += pitch;
