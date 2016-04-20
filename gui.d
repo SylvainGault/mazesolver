@@ -1045,7 +1045,7 @@ class SDLGui : Gui {
 		}
 
 
-		void sumColors(string rgbformat = "generic")() {
+		void actualSumColors(string rgbformat = "generic", int divAlgo = -1)() {
 			immutable uint factor = 1 << -zoomLevel;
 			immutable ubyte bytepp = f.BytesPerPixel;
 			divider!uint factorDiv = factor;
@@ -1057,7 +1057,7 @@ class SDLGui : Gui {
 
 				foreach (x; 0 .. size) {
 					Color c = getRGB!rgbformat(pixel);
-					size_t xf = x / factorDiv;
+					size_t xf = x / unswitch!divAlgo(factorDiv);
 					sums[xf].rsum += c.r;
 					sums[xf].gsum += c.g;
 					sums[xf].bsum += c.b;
@@ -1065,6 +1065,26 @@ class SDLGui : Gui {
 				}
 				line += pitch;
 			}
+		}
+
+
+		void sumColors(string rgbformat = "generic")() {
+			immutable uint factor = 1 << -zoomLevel;
+			divider!uint factorDiv = factor;
+			int divAlgo = factorDiv.get_algorithm();
+
+			if (divAlgo == 0)
+				actualSumColors!(rgbformat, 0)();
+			else if (divAlgo == 1)
+				actualSumColors!(rgbformat, 1)();
+			else if (divAlgo == 2)
+				actualSumColors!(rgbformat, 2)();
+			else if (divAlgo == 3)
+				actualSumColors!(rgbformat, 3)();
+			else if (divAlgo == 4)
+				actualSumColors!(rgbformat, 4)();
+			else
+				actualSumColors!rgbformat();
 		}
 
 
