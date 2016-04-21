@@ -1020,6 +1020,10 @@ class SDLGui : Gui {
 	private void screenBlitScaleDownLine(void* line, uint16_t pitch,
 	                                     const SDL_PixelFormat* f, size_t size) {
 
+		immutable uint factor = 1 << -zoomLevel;
+		const divider!uint factorDiv = factor;
+		immutable int divAlgo = factorDiv.get_algorithm();
+
 		Color getRGB(string rgbformat = "generic")(void* pixel) {
 			Color c = void;
 			uint32_t data = void;
@@ -1046,9 +1050,7 @@ class SDLGui : Gui {
 
 
 		void actualSumColors(string rgbformat = "generic", int divAlgo = -1)() {
-			immutable uint factor = 1 << -zoomLevel;
 			immutable ubyte bytepp = f.BytesPerPixel;
-			divider!uint factorDiv = factor;
 
 			memset(sums.ptr, 0, sums[0].sizeof * sums.length);
 
@@ -1069,10 +1071,6 @@ class SDLGui : Gui {
 
 
 		void sumColors(string rgbformat = "generic")() {
-			immutable uint factor = 1 << -zoomLevel;
-			divider!uint factorDiv = factor;
-			int divAlgo = factorDiv.get_algorithm();
-
 			if (divAlgo == 0)
 				actualSumColors!(rgbformat, 0)();
 			else if (divAlgo == 1)
