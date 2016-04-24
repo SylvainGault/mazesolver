@@ -1,0 +1,3 @@
+[submodule "libX11"]
+	path = libX11
+	url = https://github.com/D-Programming-Deimos/libX11.git
